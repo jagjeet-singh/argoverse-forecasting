@@ -1,3 +1,6 @@
+"""This module defines all the config parameters."""
+
+
 FEATURE_FORMAT = {
     "TIMESTAMP": 0,
     "TRACK_ID": 1,
@@ -65,9 +68,13 @@ _MAX_CENTERLINE_CANDIDATES_TEST = 10
 
 # Social Feature computation
 PADDING_TYPE = "REPEAT"  # Padding type for partial sequences
-STATIONARY_THRESHOLD = (13)  # index of the sorted velocity to look at, to call it as stationary
+STATIONARY_THRESHOLD = (
+    13
+)  # index of the sorted velocity to look at, to call it as stationary
 VELOCITY_THRESHOLD = 1.0  # Velocity threshold for stationary
-EXIST_THRESHOLD = (15)  # Number of timesteps the track should exist to be considered in social context
+EXIST_THRESHOLD = (
+    15
+)  # Number of timesteps the track should exist to be considered in social context
 DEFAULT_MIN_DIST_FRONT_AND_BACK = 100.0  # Default front/back distance
 NEARBY_DISTANCE_THRESHOLD = 50.0  # Distance threshold to call a track as neighbor
 FRONT_OR_BACK_OFFSET_THRESHOLD = 5.0  # Offset threshold from direction of travel

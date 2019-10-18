@@ -1,7 +1,7 @@
 """This module is used for Nearest Neighbor based baselines.
 
-    Example usage:
-        $ python nn_train_test.py --data_dir ../../data/ --use_map --use_delta --n_neigh 3
+Example usage:
+    $ python nn_train_test.py --test_features ../data/forecasting_data_test.pkl --train_features ../data/forecasting_data_train.pkl --val_features ../data/forecasting_data_val.pkl ../../data/ --use_map --use_delta --n_neigh 3 --traj_save_path forecasted_trajectories/nn_none.pkl
 """
 
 import argparse
@@ -86,12 +86,14 @@ def parse_arguments():
 
 
 def perform_k_nn_experiments(
-    data_dict: Dict[str, Union[np.ndarray, pd.DataFrame, None]], baseline_key:str
+    data_dict: Dict[str, Union[np.ndarray, pd.DataFrame, None]], baseline_key: str
 ) -> None:
-    """ Perform various experiments using K Nearest Neighbor Regressor.
+    """Perform various experiments using K Nearest Neighbor Regressor.
+
     Args:
         data_dict (dict): Dictionary of train/val/test data
         baseline_key: Key for obtaining features for the baseline
+
     """
     args = parse_arguments()
 

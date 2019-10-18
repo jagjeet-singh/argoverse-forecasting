@@ -7,16 +7,21 @@ import numpy as np
 import pandas as pd
 
 from utils.baseline_config import (
-    PADDING_TYPE, 
-    STATIONARY_THRESHOLD, 
-    VELOCITY_THRESHOLD, 
+    PADDING_TYPE,
+    STATIONARY_THRESHOLD,
+    VELOCITY_THRESHOLD,
     EXIST_THRESHOLD,
     DEFAULT_MIN_DIST_FRONT_AND_BACK,
-    NEARBY_DISTANCE_THRESHOLD, FRONT_OR_BACK_OFFSET_THRESHOLD, 
+    NEARBY_DISTANCE_THRESHOLD,
+    FRONT_OR_BACK_OFFSET_THRESHOLD,
 )
 
+
 class SocialFeaturesUtils:
+    """Utils class for computation of social features."""
+
     def __init__(self):
+        """Initialize class."""
         self.PADDING_TYPE = PADDING_TYPE
         self.STATIONARY_THRESHOLD = STATIONARY_THRESHOLD
         self.VELOCITY_THRESHOLD = VELOCITY_THRESHOLD
@@ -31,6 +36,7 @@ class SocialFeaturesUtils:
             track_df (pandas Dataframe): Data for the track
         Returns:
             vel (list of float): Velocity at each timestep
+
         """
         x_coord = track_df["X"].values
         y_coord = track_df["Y"].values
@@ -50,7 +56,6 @@ class SocialFeaturesUtils:
 
         return vel
 
-
     def get_is_track_stationary(self, track_df: pd.DataFrame) -> bool:
         """Check if the track is stationary.
 
@@ -58,15 +63,18 @@ class SocialFeaturesUtils:
             track_df (pandas Dataframe): Data for the track
         Return:
             _ (bool): True if track is stationary, else False 
+
         """
         vel = self.compute_velocity(track_df)
         sorted_vel = sorted(vel)
         threshold_vel = sorted_vel[self.STATIONARY_THRESHOLD]
         return True if threshold_vel < self.VELOCITY_THRESHOLD else False
 
-
     def fill_track_lost_in_middle(
-        self, track_array: np.ndarray, seq_timestamps: np.ndarray, raw_data_format: Dict[str, int]
+        self,
+        track_array: np.ndarray,
+        seq_timestamps: np.ndarray,
+        raw_data_format: Dict[str, int],
     ) -> np.ndarray:
         """Handle the case where the object exited and then entered the frame but still retains the same track id. It'll be a rare case.
 
@@ -76,6 +84,7 @@ class SocialFeaturesUtils:
             raw_data_format (Dict): Format of the sequence
         Returns:
             filled_track (numpy array): Track data filled with missing timestamps
+
         """
         curr_idx = 0
         filled_track = np.empty((0, track_array.shape[1]))
@@ -84,7 +93,6 @@ class SocialFeaturesUtils:
             if timestamp in track_array[:, raw_data_format["TIMESTAMP"]]:
                 curr_idx += 1
         return filled_track
-
 
     def pad_track(
         self,
@@ -102,6 +110,7 @@ class SocialFeaturesUtils:
             raw_data_format (Dict): Format of the sequence
         Returns:
                 padded_track_array (numpy array): Track data padded in front and back
+
         """
         track_vals = track_df.values
         track_timestamps = track_df["TIMESTAMP"].values
@@ -125,7 +134,6 @@ class SocialFeaturesUtils:
             padded_track_array[i, 0] = seq_timestamps[i]
         return padded_track_array
 
-
     def filter_tracks(
         self, seq_df: pd.DataFrame, obs_len: int, raw_data_format: Dict[str, int]
     ) -> np.ndarray:
@@ -137,6 +145,7 @@ class SocialFeaturesUtils:
             raw_data_format (Dict): Format of the sequence
         Returns:
             social_tracks (numpy array): Array of relevant tracks
+
         """
         social_tracks = np.empty((0, obs_len, len(raw_data_format)))
 
@@ -166,9 +175,12 @@ class SocialFeaturesUtils:
 
         return social_tracks
 
-
     def get_is_front_or_back(
-        self, track: np.ndarray, neigh_x: float, neigh_y: float, raw_data_format: Dict[str, int]
+        self,
+        track: np.ndarray,
+        neigh_x: float,
+        neigh_y: float,
+        raw_data_format: Dict[str, int],
     ) -> Optional[str]:
         """Check if the neighbor is in front or back of the track.
 
@@ -178,6 +190,7 @@ class SocialFeaturesUtils:
             neigh_y (float): Neighbor y coordinate
         Returns:
             _ (str): 'front' if in front, 'back' if in back
+
         """
         # We don't have heading information. So we need at least 2 coordinates to determine that.
         # Here, front and back is determined wrt to last 2 coordinates of the track
@@ -215,7 +228,8 @@ class SocialFeaturesUtils:
             )
             dist_start_end = np.sqrt(
                 (track[-1, raw_data_format["X"]] - track[0, raw_data_format["X"]]) ** 2
-                + (track[-1, raw_data_format["Y"]] - track[0, raw_data_format["Y"]]) ** 2
+                + (track[-1, raw_data_format["Y"]] - track[0, raw_data_format["Y"]])
+                ** 2
             )
 
             return (
@@ -227,7 +241,6 @@ class SocialFeaturesUtils:
 
         else:
             return None
-
 
     def get_min_distance_front_and_back(
         self,
@@ -247,8 +260,11 @@ class SocialFeaturesUtils:
             viz (bool): Visualize tracks
         Returns:
             min_distance_front_and_back (numpy array): obs_len x 2, minimum front and back distances
+
         """
-        min_distance_front_and_back = np.full((obs_len, 2), self.DEFAULT_MIN_DIST_FRONT_AND_BACK)
+        min_distance_front_and_back = np.full(
+            (obs_len, 2), self.DEFAULT_MIN_DIST_FRONT_AND_BACK
+        )
 
         # Compute distances for each timestep in the sequence
         for i in range(obs_len):
@@ -319,7 +335,6 @@ class SocialFeaturesUtils:
             plt.show()
         return min_distance_front_and_back
 
-
     def get_num_neighbors(
         self,
         agent_track: np.ndarray,
@@ -336,6 +351,7 @@ class SocialFeaturesUtils:
             raw_data_format (Dict): Format of the sequence
         Returns:
             num_neighbors (numpy array): Number of neighbors at each timestep
+
         """
         num_neighbors = np.full((obs_len, 1), 0)
 
@@ -360,7 +376,6 @@ class SocialFeaturesUtils:
 
         return num_neighbors
 
-
     def compute_social_features(
         self,
         df: pd.DataFrame,
@@ -369,7 +384,8 @@ class SocialFeaturesUtils:
         seq_len: int,
         raw_data_format: Dict[str, int],
     ) -> np.ndarray:
-        """Compute social features for the given sequence. 
+        """Compute social features for the given sequence.
+
         Social features are meant to capture social context. 
         Here we use minimum distance to the vehicle in front, to the vehicle in back, 
         and number of neighbors as social features.
@@ -382,6 +398,7 @@ class SocialFeaturesUtils:
             raw_data_format (Dict): Format of the sequence
         Returns:
             social_features (numpy array): Social features for the agent track
+
         """
         agent_ts = np.sort(np.unique(df["TIMESTAMP"].values))
 

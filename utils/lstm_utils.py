@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """lstm_utils.py contains utility functions for running LSTM Baselines."""
 
 import os
@@ -20,15 +18,17 @@ else:
 
 
 class LSTMDataset(Dataset):
+    """PyTorch Dataset for LSTM Baselines."""
+
     def __init__(self, data_dict: Dict[str, Any], args: Any, mode: str):
-        """ Initialize the Dataset.
+        """Initialize the Dataset.
 
-    	Args:
-    		data_dict: Dict containing all the data
-    		args: Arguments passed to the baseline code
-    		mode: train/val/test mode
-    	"""
+        Args:
+            data_dict: Dict containing all the data
+            args: Arguments passed to the baseline code
+            mode: train/val/test mode
 
+        """
         self.data_dict = data_dict
         self.args = args
         self.mode = mode
@@ -48,6 +48,7 @@ class LSTMDataset(Dataset):
 
         Returns:
             Length of dataset
+
         """
         return self.data_size
 
@@ -61,6 +62,7 @@ class LSTMDataset(Dataset):
 
         Returns:
             A list containing input Tensor, Output Tensor (Empty if test) and viz helpers. 
+
         """
         return (
             torch.FloatTensor(self.input_data[idx]),
@@ -77,8 +79,8 @@ class LSTMDataset(Dataset):
             helpers: Tuple in the format specified by LSTM_HELPER_DICT_IDX
 
         Note: We need a tuple because DataLoader needs to index across all these helpers simultaneously.
-        """
 
+        """
         helper_df = self.data_dict[f"{self.mode}_helpers"]
         candidate_centerlines = helper_df["CANDIDATE_CENTERLINES"].values
         candidate_nt_distances = helper_df["CANDIDATE_NT_DISTANCES"].values
@@ -128,12 +130,15 @@ class LSTMDataset(Dataset):
 
 
 class ModelUtils:
+    """Utils for LSTM baselines."""
+
     def save_checkpoint(self, save_dir: str, state: Dict[str, Any]) -> None:
-        """Save checkpoint file
+        """Save checkpoint file.
         
         Args:
             save_dir: Directory where model is to be saved
             state: State of the model
+
         """
         filename = "{}/LSTM_rollout{}.pth.tar".format(save_dir, state["rollout_len"])
         torch.save(state, filename)
@@ -157,6 +162,7 @@ class ModelUtils:
             epoch: epoch when the model was saved.
             rollout_len: horizon used
             best_loss: loss when the checkpoint was saved
+
         """
         if os.path.isfile(checkpoint_file):
             print("=> loading checkpoint '{}'".format(checkpoint_file))
@@ -188,6 +194,7 @@ class ModelUtils:
 
         Returns: 
             input, output and helpers in the format expected by DataLoader
+
         """
         _input, output, helpers = [], [], []
 
@@ -208,6 +215,7 @@ class ModelUtils:
 
         Returns:
             Initial hidden states
+
         """
         return (
             torch.zeros(batch_size, hidden_size).to(device),

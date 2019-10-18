@@ -1,7 +1,7 @@
 """const_vel_train_test.py runs a constant velocity baseline.
 
 Example usage:
-    python const_vel_test.py --test_features data/features/forecasted_features_test.pkl --obs_len 20 --pred_len 30
+    python const_vel_test.py --test_features data/features/forecasted_features_test.pkl --obs_len 20 --pred_len 30 --traj_save_path forecasted_trajectories/const_vel.pkl
 """
 import argparse
 from typing import Any, Tuple
@@ -16,6 +16,7 @@ import utils.baseline_utils as baseline_utils
 
 
 def parse_arguments():
+    """Parse Arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--test_features",
@@ -43,8 +44,8 @@ def get_mean_velocity(coords: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         coords: Coordinates for the trajectory
     Returns:
         Mean velocity along x and y
-    """
 
+    """
     vx, vy = (
         np.zeros((coords.shape[0], coords.shape[1] - 1)),
         np.zeros((coords.shape[0], coords.shape[1] - 1)),
@@ -71,6 +72,7 @@ def predict(
         args: Arguments to the baseline
     Returns:
         pred_trajectory: Future trajectory
+
     """
     pred_trajectory = np.zeros((obs_trajectory.shape[0], args.pred_len, 2))
 
@@ -83,15 +85,17 @@ def predict(
     return pred_trajectory
 
 
-def forecast_and_save_trajectory(obs_trajectory: np.ndarray, seq_id: np.ndarray, args: Any) -> None:
+def forecast_and_save_trajectory(
+    obs_trajectory: np.ndarray, seq_id: np.ndarray, args: Any
+) -> None:
     """Forecast future trajectory and save it.
 
     Args:
         obs_trajectory: Observed trajectory
         seq_id: Sequence ids
         args: Arguments to the baseline
-    """
 
+    """
     vx, vy = get_mean_velocity(obs_trajectory)
     pred_trajectory = predict(obs_trajectory, vx, vy, args)
 
@@ -105,7 +109,7 @@ def forecast_and_save_trajectory(obs_trajectory: np.ndarray, seq_id: np.ndarray,
 
 
 def main():
-
+    """Main."""
     args = parse_arguments()
 
     df = pd.read_pickle(args.test_features)

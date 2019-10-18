@@ -9,16 +9,17 @@ import pickle as pkl
 
 from argoverse.evaluation.eval_forecasting import compute_forecasting_metrics
 from argoverse.map_representation.map_api import ArgoverseMap
-from utils.baseline_utils import viz_predictions
 from utils.baseline_config import FEATURE_FORMAT
+from utils.baseline_utils import viz_predictions
+
 
 def parse_arguments():
     """Parse command line arguments.
 
     Returns:
         parsed arguments
+        
     """
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--metrics", action="store_true", help="If true, compute metrics"
@@ -75,12 +76,12 @@ def parse_arguments():
 def get_city_names_from_features(features_df: pd.DataFrame) -> Dict[int, str]:
     """Get sequence id to city name mapping from the features.
 
-	Args:
-		features_df: DataFrame containing the features
-	Returns:
-		city_names: Dict mapping sequence id to city name
-	"""
+    Args:
+        features_df: DataFrame containing the features
+    Returns:
+        city_names: Dict mapping sequence id to city name
 
+    """
     city_names = {}
     for index, row in features_df.iterrows():
         city_names[row["SEQUENCE"]] = row["FEATURES"][0][FEATURE_FORMAT["CITY_NAME"]]
@@ -94,14 +95,15 @@ def get_pruned_guesses(
 ) -> Dict[int, List[np.ndarray]]:
     """Prune the number of guesses using map.
 
-	Args:
-		forecasted_trajectories: Trajectories forecasted by the algorithm.
-		city_names: Dict mapping sequence id to city name.
-		gt_trajectories: Ground Truth trajectories.
+    Args:
+        forecasted_trajectories: Trajectories forecasted by the algorithm.
+        city_names: Dict mapping sequence id to city name.
+        gt_trajectories: Ground Truth trajectories.
 
-	Returns:
-		Pruned number of forecasted trajectories.
-	"""
+    Returns:
+        Pruned number of forecasted trajectories.
+
+    """
     args = parse_arguments()
     avm = ArgoverseMap()
 
@@ -128,19 +130,22 @@ def get_pruned_guesses(
 def get_m_trajectories_along_n_cl(
     forecasted_trajectories: Dict[int, List[np.ndarray]]
 ) -> Dict[int, List[np.ndarray]]:
-    """Given forecasted trajectories, get <args.n_guesses_cl> trajectories along each of <args.n_cl> centerlines
+    """Given forecasted trajectories, get <args.n_guesses_cl> trajectories along each of <args.n_cl> centerlines.
 
-	Args:
-		forecasted_trajectories: Trajectories forecasted by the algorithm.
-	
-	Returns:
-		<args.n_guesses_cl> trajectories along each of <args.n_cl> centerlines.
-	"""
+    Args:
+        forecasted_trajectories: Trajectories forecasted by the algorithm.
+    
+    Returns:
+        <args.n_guesses_cl> trajectories along each of <args.n_cl> centerlines.
+
+    """
     args = parse_arguments()
     selected_trajectories = {}
     for seq_id, trajectories in forecasted_trajectories.items():
         curr_selected_trajectories = []
-        max_predictions_along_cl = min(len(forecasted_trajectories[seq_id]), args.n_cl * args.max_neighbors_cl)
+        max_predictions_along_cl = min(
+            len(forecasted_trajectories[seq_id]), args.n_cl * args.max_neighbors_cl
+        )
         for i in range(0, max_predictions_along_cl, args.max_neighbors_cl):
             for j in range(i, i + args.n_guesses_cl):
                 curr_selected_trajectories.append(forecasted_trajectories[seq_id][j])
@@ -154,14 +159,15 @@ def viz_predictions_helper(
     features_df: pd.DataFrame,
     viz_seq_id: Union[None, List[int]],
 ) -> None:
-    """Helper for visualizing predictions.
+    """Visualize predictions.
 
-	Args:
-		forecasted_trajectories: Trajectories forecasted by the algorithm.
-		gt_trajectories: Ground Truth trajectories.
-		features_df: DataFrame containing the features
-		viz_seq_id: Sequence ids to be visualized
-	"""
+    Args:
+        forecasted_trajectories: Trajectories forecasted by the algorithm.
+        gt_trajectories: Ground Truth trajectories.
+        features_df: DataFrame containing the features
+        viz_seq_id: Sequence ids to be visualized
+
+    """
     args = parse_arguments()
     seq_ids = gt_trajectories.keys() if viz_seq_id is None else viz_seq_id
     for seq_id in seq_ids:
@@ -169,12 +175,14 @@ def viz_predictions_helper(
         curr_features_df = features_df[features_df["SEQUENCE"] == seq_id]
         input_trajectory = (
             curr_features_df["FEATURES"]
-            .values[0][:args.obs_len, [FEATURE_FORMAT["X"], FEATURE_FORMAT["Y"]]]
+            .values[0][: args.obs_len, [FEATURE_FORMAT["X"], FEATURE_FORMAT["Y"]]]
             .astype("float")
         )
         output_trajectories = forecasted_trajectories[seq_id]
         candidate_centerlines = curr_features_df["CANDIDATE_CENTERLINES"].values[0]
-        city_name = curr_features_df["FEATURES"].values[0][0, FEATURE_FORMAT["CITY_NAME"]]
+        city_name = curr_features_df["FEATURES"].values[0][
+            0, FEATURE_FORMAT["CITY_NAME"]
+        ]
 
         gt_trajectory = np.expand_dims(gt_trajectory, 0)
         input_trajectory = np.expand_dims(input_trajectory, 0)
@@ -213,7 +221,7 @@ if __name__ == "__main__":
             forecasted_trajectories = get_m_trajectories_along_n_cl(
                 forecasted_trajectories
             )
-            num_trajectories = args.n_cl*args.n_guesses_cl
+            num_trajectories = args.n_cl * args.n_guesses_cl
 
         # Get displacement error and dac on pruned guesses
         elif args.prune_n_guesses:

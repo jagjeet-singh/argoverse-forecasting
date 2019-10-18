@@ -32,8 +32,8 @@ def get_data(
         baseline_key: Key for obtaining features for the baseline
     Returns:
         data_dict (dict): Dictionary of input/output data and helpers for train/val/test splits
-    """
 
+    """
     input_features = BASELINE_INPUT_FEATURES[baseline_key]
     output_features = BASELINE_OUTPUT_FEATURES[baseline_key]
     if args.test_features:
@@ -97,8 +97,8 @@ def load_and_preprocess_data(
         _input: Input to the baseline
         _output: Ground truth 
         df: Helper values useful in visualization and evaluation
-    """
 
+    """
     df = pd.read_pickle(feature_file)
 
     # Normalize if its a non-map baseline
@@ -202,8 +202,8 @@ def get_relative_distance(data: np.ndarray, mode: str, args: Any) -> np.ndarray:
         args: Arguments passed to the baseline code
     Returns:
         reference (numpy array): First value of the sequence of data with shape (num_tracks x 2). For map based baselines, it will be first n-t distance of the trajectory.
-    """
 
+    """
     reference = copy.deepcopy(data[:, 0, :2])
 
     if mode == "test":
@@ -225,8 +225,8 @@ def get_xy_from_nt_seq(nt_seq: np.ndarray, centerlines: List[np.ndarray]) -> np.
         centerlines (list of numpy array): Centerline for each track
     Returns:
         xy_seq (numpy array): Array of shape (num_tracks x seq_len x 2) where last dimension contains coordinates in map frame
-    """
 
+    """
     seq_len = nt_seq.shape[1]
 
     # coordinates obtained by interpolating distances on the centerline
@@ -247,7 +247,8 @@ def get_xy_from_nt_seq(nt_seq: np.ndarray, centerlines: List[np.ndarray]) -> np.
 
 
 def get_xy_from_nt(n: float, t: float, centerline: np.ndarray) -> Tuple[float, float]:
-    """Convert a single n-t coordinate (centerline curvilinear coordinate) to absolute x-y
+    """Convert a single n-t coordinate (centerline curvilinear coordinate) to absolute x-y.
+
     Args:
         n (float): Offset from centerline
         t (float): Distance along the centerline
@@ -255,8 +256,8 @@ def get_xy_from_nt(n: float, t: float, centerline: np.ndarray) -> Tuple[float, f
     Returns:
         x1 (float): x-coordinate in map frame
         y1 (float): y-coordinate in map frame
-    """
 
+    """
     line_string = LineString(centerline)
 
     # If distance along centerline is negative, keep it to the start of line
@@ -345,6 +346,7 @@ def viz_predictions(
         centerlines (numpy array of list of centerlines): Centerlines (Oracle/Top-k) for each trajectory
         city_names (numpy array): city names for each trajectory
         show (bool): if True, show
+
     """
     num_tracks = input_.shape[0]
     obs_len = input_.shape[1]
@@ -471,8 +473,8 @@ def get_normalized_traj(df: pd.DataFrame, args: Any) -> np.ndarray:
                                           containing normalized trajectory
     Note:
         This also updates the dataframe in-place.
-    """
 
+    """
     # Transformation values will be saved in df
     translation = []
     rotation = []
@@ -528,7 +530,7 @@ def get_normalized_traj(df: pd.DataFrame, args: Any) -> np.ndarray:
 def normalized_to_map_coordinates(
     coords: np.ndarray, translation: List[List[float]], rotation: List[float]
 ) -> np.ndarray:
-    """Denormalize trajectory to bring it back to map frame
+    """Denormalize trajectory to bring it back to map frame.
 
     Args:
         coords (numpy array): Array of shape (num_tracks x seq_len x 2) containing normalized coordinates
@@ -536,6 +538,7 @@ def normalized_to_map_coordinates(
         rotation (list): Rotation angle used in normalizing trajectories 
     Returns:
         _ (numpy array: Array of shape (num_tracks x seq_len x 2) containing coordinates in map frame
+
     """
     abs_coords = []
     for i in range(coords.shape[0]):
@@ -560,7 +563,7 @@ def get_abs_traj(
     helpers: Dict[str, Any],
     start_idx: int = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """ Get absolute trajectory reverting all the transformations.
+    """Get absolute trajectory reverting all the transformations.
 
     Args:
         input_ (numpy array): Input Trajectory with shape (num_tracks x obs_len x 2)
@@ -571,6 +574,7 @@ def get_abs_traj(
     Returns:            
         input_ (numpy array): Input Trajectory in map frame with shape (num_tracks x obs_len x 2)
         output (numpy array): Predicted Trajectory in map frame with shape (num_tracks x pred_len x 2)
+
     """
     obs_len = input_.shape[1]
     pred_len = output.shape[1]
@@ -634,8 +638,8 @@ def get_model(
 
     Returns:
         grid_search: sklearn GridSearchCV object
-    """
 
+    """
     # Load model
     if args.test:
 
@@ -664,12 +668,13 @@ def get_model(
 
 
 def merge_saved_traj(batched_dir: str, merged_file_path: str):
-    """Load saved trajectories, merge them, save the merged one, delete the individual ones
+    """Load saved trajectories, merge them, save the merged one, delete the individual ones.
 
     Args:
         batched_dir: Directory where forecasted trajectories for all the batches are saved
         merged_file_path: Path to the pickle file where merged file is to be saved.
     Note: batched_dir should only contain the files that are to be merged
+
     """
     file_names = os.listdir(batched_dir)
     forecasted_trajectories = {}
@@ -686,8 +691,7 @@ def merge_saved_traj(batched_dir: str, merged_file_path: str):
 def get_test_data_dict_subset(
     data_dict: Dict[str, Union[np.ndarray, None]], args: Any
 ) -> Dict[int, Dict[str, Union[np.ndarray, None]]]:
-    """Get test subset from data dict. Useful when used with joblib as we don't need to pass
-    the entire data_dict to all the batches.
+    """Get test subset from data dict. Useful when used with joblib as we don't need to pass the entire data_dict to all the batches.
 
     Args:
         data_dict: Data dictionary containing all the data
@@ -696,6 +700,7 @@ def get_test_data_dict_subset(
     Returns:
         test_data_dict_batches: test data subsets. key is the start index of the joblib batch
                                 and value is the subset of test data corresponding to that batch.
+
     """
     test_size = data_dict["test_input"].shape[0]
     test_data_dict_batches = {}
@@ -716,13 +721,16 @@ def validate_args(args: Any) -> bool:
 
     Returns:
         success: True if args valid.
+
     """
     success = True
     if args.normalize and args.use_map:
         print("[ARGS ERROR]: normalize and use_map cannot be used simultaneously.")
         success = False
     if args.use_social and args.use_map:
-        print("[ARGS ERROR]: The code currently does not support use_social and use_map simultaneously.")
+        print(
+            "[ARGS ERROR]: The code currently does not support use_social and use_map simultaneously."
+        )
         success = False
     if args.obs_len > 20:
         print("[ARGS ERROR]: obs_len cannot be more than 20.")

@@ -1,8 +1,7 @@
 """This module is used for computing social and map features for motion forecasting baselines.
 
 Example usage:
-    $ python computeFeatures_parallel.py --data_dir ~/val/data 
-        --feature_dir ~/val/features --mode val --batch_size 1000
+    $ python compute_features.py --data_dir ~/val/data --feature_dir ~/val/features --mode val
 """
 
 import os
@@ -20,6 +19,7 @@ import pickle as pkl
 from utils.baseline_config import RAW_DATA_FORMAT, _FEATURES_SMALL_SIZE
 from utils.map_features_utils import MapFeaturesUtils
 from utils.social_features_utils import SocialFeaturesUtils
+
 
 def parse_arguments() -> Any:
     """Parse command line arguments."""
@@ -53,7 +53,13 @@ def parse_arguments() -> Any:
     return parser.parse_args()
 
 
-def load_seq_save_features(start_idx: int, sequences: List[str], save_dir: str, map_features_utils_instance: MapFeaturesUtils, social_features_utils_instance: SocialFeaturesUtils) -> None:
+def load_seq_save_features(
+    start_idx: int,
+    sequences: List[str],
+    save_dir: str,
+    map_features_utils_instance: MapFeaturesUtils,
+    social_features_utils_instance: SocialFeaturesUtils,
+) -> None:
     """Load sequences, compute features, and save them.
     
     Args:
@@ -62,6 +68,7 @@ def load_seq_save_features(start_idx: int, sequences: List[str], save_dir: str, 
         save_dir: Directory where features for the current batch are to be saved
         map_features_utils_instance: MapFeaturesUtils instance
         social_features_utils_instance: SocialFeaturesUtils instance
+
     """
     count = 0
     args = parse_arguments()
@@ -77,7 +84,9 @@ def load_seq_save_features(start_idx: int, sequences: List[str], save_dir: str, 
         seq_id = int(seq.split(".")[0])
 
         # Compute social and map features
-        features, map_feature_helpers = compute_features(file_path, map_features_utils_instance, social_features_utils_instance)
+        features, map_feature_helpers = compute_features(
+            file_path, map_features_utils_instance, social_features_utils_instance
+        )
         count += 1
         data.append(
             [
@@ -111,7 +120,11 @@ def load_seq_save_features(start_idx: int, sequences: List[str], save_dir: str, 
     )
 
 
-def compute_features(seq_path: str, map_features_utils_instance: MapFeaturesUtils, social_features_utils_instance: SocialFeaturesUtils) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
+def compute_features(
+    seq_path: str,
+    map_features_utils_instance: MapFeaturesUtils,
+    social_features_utils_instance: SocialFeaturesUtils,
+) -> Tuple[np.ndarray, Dict[str, np.ndarray]]:
     """Compute social and map features for the sequence.
 
     Args:
@@ -121,6 +134,7 @@ def compute_features(seq_path: str, map_features_utils_instance: MapFeaturesUtil
     Returns:
         merged_features (numpy array): SEQ_LEN x NUM_FEATURES
         map_feature_helpers (dict): Dictionary containing helpers for map features
+
     """
     args = parse_arguments()
     df = pd.read_csv(seq_path, dtype={"TIMESTAMP": str})
@@ -130,11 +144,7 @@ def compute_features(seq_path: str, map_features_utils_instance: MapFeaturesUtil
 
     # Social features are computed using only the observed trajectory
     social_features = social_features_utils_instance.compute_social_features(
-        df,
-        agent_track,
-        args.obs_len,
-        args.obs_len + args.pred_len,
-        RAW_DATA_FORMAT,
+        df, agent_track, args.obs_len, args.obs_len + args.pred_len, RAW_DATA_FORMAT
     )
 
     # agent_track will be used to compute n-t distances for future trajectory,
@@ -172,6 +182,7 @@ def merge_saved_features(batch_save_dir: str) -> None:
 
     Args:
         batch_save_dir: Directory where features for all the batches are saved.
+
     """
     args = parse_arguments()
     feature_files = os.listdir(batch_save_dir)
@@ -209,7 +220,13 @@ if __name__ == "__main__":
     num_sequences = _FEATURES_SMALL_SIZE if args.small else len(sequences)
 
     Parallel(n_jobs=-2)(
-        delayed(load_seq_save_features)(i, sequences, temp_save_dir, map_features_utils_instance, social_features_utils_instance)
+        delayed(load_seq_save_features)(
+            i,
+            sequences,
+            temp_save_dir,
+            map_features_utils_instance,
+            social_features_utils_instance,
+        )
         for i in range(0, num_sequences, args.batch_size)
     )
     merge_saved_features(temp_save_dir)

@@ -22,16 +22,18 @@ PREDICTION_HORIZONS = [30]
 
 
 class Regressor:
+    """K-NN Regressor class for training and inference."""
+
     def run_grid_search(self, x: np.ndarray, y: np.ndarray) -> GridSearchCV:
-        """Run grid search to find best hyperparameters
+        """Run grid search to find best hyperparameters.
 
         Args:
             x: Train input
             y: Train output
         Returns:
             GridSearchCV object
-        """
 
+        """
         estimators = [
             ("preprocessing", preprocessing.StandardScaler()),
             ("reduce_dim", PCA()),
@@ -78,6 +80,7 @@ class Regressor:
             test_helpers (pandas Dataframe): Test map helpers 
             num_features: Number of input features
             args: Arguments passed to runNNBaselines.py
+
         """
         # Create a temporary directory where forecasted trajectories for all the batches will be saved
         temp_save_dir = tempfile.mkdtemp()
@@ -138,14 +141,16 @@ class Regressor:
         num_features: int,
         args: Any,
     ) -> None:
-        """Train and test the model on different prediction horizons for non-map baselines
-            Args:
-                train_input (numpy array): Train input data 
-                train_output (numpy array): Train ground truth data 
-                test_input (numpy array): Test input data  
-                test_helpers (pandas Dataframe): Test map helpers 
-                num_features: Number of input features
-                args (Argparse): Config parameters
+        """Train and test the model on different prediction horizons for non-map baselines.
+
+        Args:
+            train_input (numpy array): Train input data 
+            train_output (numpy array): Train ground truth data 
+            test_input (numpy array): Test input data  
+            test_helpers (pandas Dataframe): Test map helpers 
+            num_features: Number of input features
+            args (Argparse): Config parameters
+
         """
         # Create a temporary directory where forecasted trajectories for all the batches will be saved
         temp_save_dir = tempfile.mkdtemp()
@@ -164,7 +169,9 @@ class Regressor:
         )
 
         test_references = test_helpers["DELTA_REFERENCE"].values
-        test_translation = test_helpers["TRANSLATION"].values if args.normalize else None
+        test_translation = (
+            test_helpers["TRANSLATION"].values if args.normalize else None
+        )
         test_rotation = test_helpers["ROTATION"].values if args.normalize else None
         test_seq_ids = test_helpers["SEQUENCE"].values
 
@@ -221,7 +228,7 @@ class Regressor:
         horizon: int,
         save_dir: str,
     ) -> np.ndarray:
-        """Helper function for map-based baselines inference. This function does the inference based on the given model, and saves the forecasted trajectories.
+        """Map-based baselines inference. This function does the inference based on the given model, and saves the forecasted trajectories.
 
         Args:
             grid_search: GridSearchCV object,
@@ -236,7 +243,8 @@ class Regressor:
             horizon: Prediction Horizon, 
             save_dir: Directory where forecasted trajectories are to be saved 
         Returns:
-            forecasted_trajectories: Forecasted trajectories  
+            forecasted_trajectories: Forecasted trajectories 
+
         """
         test_num_tracks = test_nt.shape[0]
         print(f"Map-based Inference currently at index {start_idx} ...")
@@ -329,8 +337,7 @@ class Regressor:
         horizon: int,
         save_dir: str,
     ) -> None:
-
-        """Helper function for non-map baselines inference. This function does the inference based on the given model, and saves the forecasted trajectories.
+        """Non-map baselines inference. This function does the inference based on the given model, and saves the forecasted trajectories.
 
         Args:
             grid_search: GridSearchCV object
@@ -345,6 +352,7 @@ class Regressor:
             num_features: Number of features,
             horizon: Prediction Horizon, 
             save_dir: Directory where forecasted trajectories are to be saved      
+
         """
         test_num_tracks = test_input.shape[0]
         print(f"Absolute Inference currently at index {start_idx} ...")

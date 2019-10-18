@@ -1,8 +1,9 @@
 """lstm_train_test.py runs the LSTM baselines training/inference on forecasting dataset.
+
 Note: The training code for these baselines is covered under the patent <PATENT_LINK>.
 
 Example usage:
-python lstm_train_test.py --model_path saved_models/lstmmap.pth.tar --test_features ../data/forecasting_data_train.pkl
+python lstm_train_test.py --model_path saved_models/lstm.pth.tar --test_features ../data/forecasting_data_test.pkl --train_features ../data/forecasting_data_train.pkl --val_features ../data/forecasting_data_val.pkl --use_delta --normalize
 """
 
 import os
@@ -43,6 +44,7 @@ def parse_arguments() -> Any:
 
     Returns:
         parsed arguments
+
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -93,7 +95,9 @@ def parse_arguments() -> Any:
         "--use_map", action="store_true", help="Use the map based features"
     )
     parser.add_argument("--use_social", action="store_true", help="Use social features")
-    parser.add_argument("--test", action="store_true", help="If true, only run the inference")
+    parser.add_argument(
+        "--test", action="store_true", help="If true, only run the inference"
+    )
     parser.add_argument(
         "--train_batch_size", type=int, default=512, help="Training batch size"
     )
@@ -112,7 +116,7 @@ def parse_arguments() -> Any:
 
 
 class EncoderRNN(nn.Module):
-    """Encoder Network"""
+    """Encoder Network."""
 
     def __init__(
         self, input_size: int = 2, embedding_size: int = 8, hidden_size: int = 16
@@ -123,6 +127,7 @@ class EncoderRNN(nn.Module):
             input_size: number of features in the input
             embedding_size: Embedding size
             hidden_size: Hidden size of LSTM
+
         """
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
@@ -137,7 +142,8 @@ class EncoderRNN(nn.Module):
             x: input to the network
             hidden: initial hidden state
         Returns:
-            hidden: final hidden state
+            hidden: final hidden 
+
         """
         embedded = F.relu(self.linear1(x))
         hidden = self.lstm1(embedded, hidden)
@@ -145,7 +151,7 @@ class EncoderRNN(nn.Module):
 
 
 class DecoderRNN(nn.Module):
-    """Decoder Network"""
+    """Decoder Network."""
 
     def __init__(self, embedding_size=8, hidden_size=16, output_size=2):
         """Initialize the decoder network.
@@ -154,6 +160,7 @@ class DecoderRNN(nn.Module):
             embedding_size: Embedding size
             hidden_size: Hidden size of LSTM
             output_size: number of features in the output
+
         """
         super(DecoderRNN, self).__init__()
         self.hidden_size = hidden_size
@@ -171,6 +178,7 @@ class DecoderRNN(nn.Module):
         Returns:
             output: output from lstm
             hidden: final hidden state
+
         """
         embedded = F.relu(self.linear1(x))
         hidden = self.lstm1(embedded, hidden)
@@ -190,12 +198,11 @@ def train(
     model_utils: ModelUtils,
     rollout_len: int = 30,
 ) -> None:
-
     """Train the lstm network.
 
     Args:
         train_loader: DataLoader for the train set
-	epoch: epoch number
+        epoch: epoch number
         criterion: Loss criterion
         logger: Tensorboard logger
         encoder: Encoder network instance
@@ -204,6 +211,7 @@ def train(
         decoder_optimizer: optimizer for the decoder network
         model_utils: instance for ModelUtils class
         rollout_len: current prediction horizon
+
     """
     args = parse_arguments()
     global global_step
@@ -290,7 +298,6 @@ def validate(
     decrement_counter: int,
     rollout_len: int = 30,
 ) -> Tuple[float, int]:
-
     """Validate the lstm network.
 
     Args:
@@ -306,8 +313,8 @@ def validate(
         prev_loss: Loss in the previous validation run
         decrement_counter: keeping track of the number of consecutive times loss increased in the current rollout
         rollout_len: current prediction horizon
-    """
 
+    """
     args = parse_arguments()
     global best_loss
     total_loss = []
@@ -424,8 +431,8 @@ def infer_absolute(
         start_idx: start index for the current joblib batch
         forecasted_save_dir: Directory where forecasted trajectories are to be saved
         model_utils: ModelUtils instance
-    """
 
+    """
     args = parse_arguments()
     forecasted_trajectories = {}
 
@@ -511,8 +518,8 @@ def infer_map(
         start_idx: start index for the current joblib batch
         forecasted_save_dir: Directory where forecasted trajectories are to be saved
         model_utils: ModelUtils instance
-    """
 
+    """
     args = parse_arguments()
     global best_loss
     forecasted_trajectories = {}
@@ -618,7 +625,7 @@ def infer_helper(
     model_utils: ModelUtils,
     forecasted_save_dir: str,
 ):
-    """Helper function for running inference on the current joblib batch.
+    """Run inference on the current joblib batch.
 
     Args:
         curr_data_dict: Data dictionary for the current joblib batch
@@ -627,8 +634,8 @@ def infer_helper(
         decoder: Decoder network instance
         model_utils: ModelUtils instance
         forecasted_save_dir: Directory where forecasted trajectories are to be saved
-    """
 
+    """
     args = parse_arguments()
     curr_test_dataset = LSTMDataset(curr_data_dict, args, "test")
     curr_test_loader = torch.utils.data.DataLoader(
@@ -664,7 +671,7 @@ def infer_helper(
 
 
 def main():
-
+    """Main."""
     args = parse_arguments()
 
     if not baseline_utils.validate_args(args):
@@ -812,12 +819,7 @@ def main():
         # test_batch_size should be lesser than joblib_batch_size
         Parallel(n_jobs=-2, verbose=2)(
             delayed(infer_helper)(
-                test_data_subsets[i],
-                i,
-                encoder,
-                decoder,
-                model_utils,
-                temp_save_dir,
+                test_data_subsets[i], i, encoder, decoder, model_utils, temp_save_dir
             )
             for i in range(0, test_size, args.joblib_batch_size)
         )

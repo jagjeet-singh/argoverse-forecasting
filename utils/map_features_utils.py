@@ -18,11 +18,15 @@ from utils.baseline_config import (
     _DFS_THRESHOLD_FRONT_SCALE,
     _DFS_THRESHOLD_BACK_SCALE,
     _MAX_SEARCH_RADIUS_CENTERLINES,
-    _MAX_CENTERLINE_CANDIDATES_TEST    
+    _MAX_CENTERLINE_CANDIDATES_TEST,
 )
 
+
 class MapFeaturesUtils:
+    """Utils for computation of map-based features."""
+
     def __init__(self):
+        """Initialize class."""
         self._MANHATTAN_THRESHOLD = _MANHATTAN_THRESHOLD
         self._DFS_THRESHOLD_FRONT_SCALE = _DFS_THRESHOLD_FRONT_SCALE
         self._DFS_THRESHOLD_BACK_SCALE = _DFS_THRESHOLD_BACK_SCALE
@@ -34,14 +38,15 @@ class MapFeaturesUtils:
     ) -> int:
         """Get the number of coordinates that lie insde the lane seq polygon.
 
-    	Args:
-    		lane_seq: Sequence of lane ids
-    		xy_seq: Trajectory coordinates
-    		city_name: City name (PITT/MIA)
-    		avm: Argoverse map_api instance
-    	Returns:
-    		point_in_polygon_score: Number of coordinates in the trajectory that lie within the lane sequence
-    	"""
+        Args:
+            lane_seq: Sequence of lane ids
+            xy_seq: Trajectory coordinates
+            city_name: City name (PITT/MIA)
+            avm: Argoverse map_api instance
+        Returns:
+            point_in_polygon_score: Number of coordinates in the trajectory that lie within the lane sequence
+
+        """
         lane_seq_polygon = cascaded_union(
             [
                 Polygon(avm.get_lane_segment_polygon(lane, city_name)).buffer(0)
@@ -53,20 +58,24 @@ class MapFeaturesUtils:
             point_in_polygon_score += lane_seq_polygon.contains(Point(xy))
         return point_in_polygon_score
 
-
     def sort_lanes_based_on_point_in_polygon_score(
-        self, lane_seqs: List[List[int]], xy_seq: np.ndarray, city_name: str, avm: ArgoverseMap
+        self,
+        lane_seqs: List[List[int]],
+        xy_seq: np.ndarray,
+        city_name: str,
+        avm: ArgoverseMap,
     ) -> List[List[int]]:
         """Filter lane_seqs based on the number of coordinates inside the bounding polygon of lanes.
 
-    	Args:
-    		lane_seqs: Sequence of lane sequences
-    		xy_seq: Trajectory coordinates
-    		city_name: City name (PITT/MIA)
-    		avm: Argoverse map_api instance
-    	Returns:
-    		sorted_lane_seqs: Sequences of lane sequences sorted based on the point_in_polygon score
-    	"""
+        Args:
+            lane_seqs: Sequence of lane sequences
+            xy_seq: Trajectory coordinates
+            city_name: City name (PITT/MIA)
+            avm: Argoverse map_api instance
+        Returns:
+            sorted_lane_seqs: Sequences of lane sequences sorted based on the point_in_polygon score
+
+        """
         point_in_polygon_scores = []
         for lane_seq in lane_seqs:
             point_in_polygon_scores.append(
@@ -82,7 +91,6 @@ class MapFeaturesUtils:
         ]
         return sorted_lane_seqs, sorted_scores
 
-
     def get_heuristic_centerlines_for_test_set(
         self,
         lane_seqs: List[List[int]],
@@ -93,17 +101,17 @@ class MapFeaturesUtils:
         scores: List[int],
     ) -> List[np.ndarray]:
         """Sort based on distance along centerline and return the centerlines.
-    	
-    	Args:
-    		lane_seqs: Sequence of lane sequences
-    		xy_seq: Trajectory coordinates
-    		city_name: City name (PITT/MIA)
-    		avm: Argoverse map_api instance
-    		max_candidates: Maximum number of centerlines to return
-    	Return:
-    		sorted_candidate_centerlines: Centerlines in the order of their score 
-    	"""
+        
+        Args:
+            lane_seqs: Sequence of lane sequences
+            xy_seq: Trajectory coordinates
+            city_name: City name (PITT/MIA)
+            avm: Argoverse map_api instance
+            max_candidates: Maximum number of centerlines to return
+        Return:
+            sorted_candidate_centerlines: Centerlines in the order of their score 
 
+        """
         aligned_centerlines = []
         diverse_centerlines = []
         diverse_scores = []
@@ -146,11 +154,12 @@ class MapFeaturesUtils:
                 replace=False,
                 p=probabilities,
             )
-            diverse_centerlines = [diverse_centerlines[i] for i in diverse_centerlines_idx]
+            diverse_centerlines = [
+                diverse_centerlines[i] for i in diverse_centerlines_idx
+            ]
             test_centerlines += diverse_centerlines
 
         return test_centerlines
-
 
     def get_candidate_centerlines_for_trajectory(
         self,
@@ -163,34 +172,37 @@ class MapFeaturesUtils:
         max_candidates: int = 10,
         mode: str = "test",
     ) -> List[np.ndarray]:
-        """ Get centerline candidates upto a threshold.
+        """Get centerline candidates upto a threshold.
 
-    	Algorithm:
-    	1. Take the lanes in the bubble of last observed coordinate
-    	2. Extend before and after considering all possible candidates
-    	3. Get centerlines with max distance along centerline
+        Algorithm:
+        1. Take the lanes in the bubble of last observed coordinate
+        2. Extend before and after considering all possible candidates
+        3. Get centerlines based on point in polygon score.
 
-    	Args:
-    		xy: Trajectory coordinates, 
-    		city_name: City name, 
-    		avm: Argoverse map_api instance, 
-    		viz: Visualize candidate centerlines, 
-    		max_search_radius: Max search radius for finding nearby lanes in meters,
-    		seq_len: Sequence length, 
-    		max_candidates: Maximum number of centerlines to return, 
-    		mode: train/val/test mode
+        Args:
+            xy: Trajectory coordinates, 
+            city_name: City name, 
+            avm: Argoverse map_api instance, 
+            viz: Visualize candidate centerlines, 
+            max_search_radius: Max search radius for finding nearby lanes in meters,
+            seq_len: Sequence length, 
+            max_candidates: Maximum number of centerlines to return, 
+            mode: train/val/test mode
 
-    	Returns:
-    		candidate_centerlines: List of candidate centerlines
-    	"""
+        Returns:
+            candidate_centerlines: List of candidate centerlines
 
+        """
         # Get all lane candidates within a bubble
         curr_lane_candidates = avm.get_lane_ids_in_xy_bbox(
             xy[-1, 0], xy[-1, 1], city_name, self._MANHATTAN_THRESHOLD
         )
 
         # Keep expanding the bubble until at least 1 lane is found
-        while len(curr_lane_candidates) < 1 and self._MANHATTAN_THRESHOLD < max_search_radius:
+        while (
+            len(curr_lane_candidates) < 1
+            and self._MANHATTAN_THRESHOLD < max_search_radius
+        ):
             self._MANHATTAN_THRESHOLD *= 2
             curr_lane_candidates = avm.get_lane_ids_in_xy_bbox(
                 xy[-1, 0], xy[-1, 1], city_name, self._MANHATTAN_THRESHOLD
@@ -202,7 +214,9 @@ class MapFeaturesUtils:
         traj_len = xy.shape[0]
 
         # Assuming a speed of 50 mps, set threshold for traversing in the front and back
-        dfs_threshold_front = self._DFS_THRESHOLD_FRONT_SCALE * (seq_len + 1 - traj_len) / 10
+        dfs_threshold_front = (
+            self._DFS_THRESHOLD_FRONT_SCALE * (seq_len + 1 - traj_len) / 10
+        )
         dfs_threshold_back = self._DFS_THRESHOLD_BACK_SCALE * (traj_len + 1) / 10
 
         # DFS to get all successor and predecessor candidates
@@ -233,21 +247,35 @@ class MapFeaturesUtils:
                 obs_pred_lanes, xy, city_name, avm, max_candidates, scores
             )
         else:
-            candidate_centerlines = avm.get_cl_from_lane_seq([obs_pred_lanes[0]], city_name)
+            candidate_centerlines = avm.get_cl_from_lane_seq(
+                [obs_pred_lanes[0]], city_name
+            )
 
         if viz:
             plt.figure(0, figsize=(8, 7))
             for centerline_coords in candidate_centerlines:
                 visualize_centerline(centerline_coords)
             plt.plot(
-                xy[:, 0], xy[:, 1], "-", color="#d33e4c", alpha=1, linewidth=3, zorder=15
+                xy[:, 0],
+                xy[:, 1],
+                "-",
+                color="#d33e4c",
+                alpha=1,
+                linewidth=3,
+                zorder=15,
             )
 
             final_x = xy[-1, 0]
             final_y = xy[-1, 1]
 
             plt.plot(
-                final_x, final_y, "o", color="#d33e4c", alpha=1, markersize=10, zorder=15
+                final_x,
+                final_y,
+                "o",
+                color="#d33e4c",
+                alpha=1,
+                markersize=10,
+                zorder=15,
             )
             plt.xlabel("Map X")
             plt.ylabel("Map Y")
@@ -256,7 +284,6 @@ class MapFeaturesUtils:
             plt.show()
 
         return candidate_centerlines
-
 
     def compute_map_features(
         self,
@@ -267,20 +294,22 @@ class MapFeaturesUtils:
         mode: str,
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
         """Compute map based features for the given sequence.
-    	If the mode is test, oracle_nt_dist will be empty, candidate_nt_dist will be populated.
-    	If the mode is train/val, oracle_nt_dist will be populated, candidate_nt_dist will be empty.
 
-    	Args:
-    		agent_track : Data for the agent track
-    		obs_len : Length of observed trajectory
-    		seq_len : Length of the sequence
-    		raw_data_format : Format of the sequence
-    		mode: train/val/test mode
-    		
-    	Returns:
-    		oracle_nt_dist (numpy array): normal and tangential distances for oracle centerline
-    			map_feature_helpers (dict): Dictionary containing helpers for map features
-    	"""
+        If the mode is test, oracle_nt_dist will be empty, candidate_nt_dist will be populated.
+        If the mode is train/val, oracle_nt_dist will be populated, candidate_nt_dist will be empty.
+
+        Args:
+            agent_track : Data for the agent track
+            obs_len : Length of observed trajectory
+            seq_len : Length of the sequence
+            raw_data_format : Format of the sequence
+            mode: train/val/test mode
+            
+        Returns:
+            oracle_nt_dist (numpy array): normal and tangential distances for oracle centerline
+                map_feature_helpers (dict): Dictionary containing helpers for map features
+
+        """
         # Get observed 2 secs of the agent
         agent_xy = agent_track[:, [raw_data_format["X"], raw_data_format["Y"]]].astype(
             "float"
