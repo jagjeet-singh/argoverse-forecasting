@@ -9,7 +9,7 @@
 
 ## Table of Contents
 
-> If you have any questions, feel free to open a [GitHub issue](https://github.argo.ai/jsingh/argoverse-forecasting/issues) describing the problem.
+> If you have any questions, feel free to open a [GitHub issue](https://github.com/jagjeet-singh/argoverse-forecasting/issues) describing the problem.
 
 - [Installation](#installation)
 - [Usage](#usage)
@@ -43,7 +43,7 @@ Running Motion Forecasting baselines has the below 3 components. The runtimes ob
 
 ### 1) Feature computation (`compute_features.py`)
 
-To begin with, we need to compute social and map features for train, val and test set. This is the most time consuming part.
+To begin with, we need to compute social and map features for train, val and test set. This is the most computationally expensive part.
 
 Run the following script to compute features for each of train/val/test.
 ```
@@ -125,17 +125,17 @@ Some examples:
 
 Evaluating a baseline that didn't use map and allowing 6 guesses
 ```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 1 --features <path/to/test/features> --max_n_guesses 6
+python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --max_n_guesses 6
 ```
 
 Evaluating a baseline that used map prior and allowing 1 guesses along each of the 9 centerlines
 ```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 1 --features <path/to/test/features> --n_guesses_cl 1 --n_cl 9 --max_neighbors_cl 3
+python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --n_guesses_cl 1 --n_cl 9 --max_neighbors_cl 3
 ```
 
 Evaluating a K-NN baseline that can use map for pruning and allowing 6 guesses
 ```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 1 --features <path/to/test/features> --prune_n_guesses 6
+python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --prune_n_guesses 6
 ```
 
 It will print out something like
