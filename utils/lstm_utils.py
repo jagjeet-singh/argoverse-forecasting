@@ -19,7 +19,6 @@ else:
 
 class LSTMDataset(Dataset):
     """PyTorch Dataset for LSTM Baselines."""
-
     def __init__(self, data_dict: Dict[str, Any], args: Any, mode: str):
         """Initialize the Dataset.
 
@@ -52,9 +51,8 @@ class LSTMDataset(Dataset):
         """
         return self.data_size
 
-    def __getitem__(
-        self, idx: int
-    ) -> Tuple[torch.FloatTensor, Any, Dict[str, np.ndarray]]:
+    def __getitem__(self, idx: int
+                    ) -> Tuple[torch.FloatTensor, Any, Dict[str, np.ndarray]]:
         """Get the element at the given index.
 
         Args:
@@ -66,9 +64,8 @@ class LSTMDataset(Dataset):
         """
         return (
             torch.FloatTensor(self.input_data[idx]),
-            torch.empty(1)
-            if self.mode == "test"
-            else torch.FloatTensor(self.output_data[idx]),
+            torch.empty(1) if self.mode == "test" else torch.FloatTensor(
+                self.output_data[idx]),
             self.helpers[idx],
         )
 
@@ -84,41 +81,28 @@ class LSTMDataset(Dataset):
         helper_df = self.data_dict[f"{self.mode}_helpers"]
         candidate_centerlines = helper_df["CANDIDATE_CENTERLINES"].values
         candidate_nt_distances = helper_df["CANDIDATE_NT_DISTANCES"].values
-        xcoord = np.stack(helper_df["FEATURES"].values)[
-            :, :, config.FEATURE_FORMAT["X"]
-        ].astype("float")
-        ycoord = np.stack(helper_df["FEATURES"].values)[
-            :, :, config.FEATURE_FORMAT["Y"]
-        ].astype("float")
+        xcoord = np.stack(helper_df["FEATURES"].values
+                          )[:, :, config.FEATURE_FORMAT["X"]].astype("float")
+        ycoord = np.stack(helper_df["FEATURES"].values
+                          )[:, :, config.FEATURE_FORMAT["Y"]].astype("float")
         centroids = np.stack((xcoord, ycoord), axis=2)
         _DEFAULT_HELPER_VALUE = np.full((centroids.shape[0]), None)
-        city_names = np.stack(helper_df["FEATURES"].values)[
-            :, :, config.FEATURE_FORMAT["CITY_NAME"]
-        ]
+        city_names = np.stack(helper_df["FEATURES"].values
+                              )[:, :, config.FEATURE_FORMAT["CITY_NAME"]]
         seq_paths = helper_df["SEQUENCE"].values
-        translation = (
-            helper_df["TRANSLATION"].values
-            if self.args.normalize
-            else _DEFAULT_HELPER_VALUE
-        )
-        rotation = (
-            helper_df["ROTATION"].values
-            if self.args.normalize
-            else _DEFAULT_HELPER_VALUE
-        )
+        translation = (helper_df["TRANSLATION"].values
+                       if self.args.normalize else _DEFAULT_HELPER_VALUE)
+        rotation = (helper_df["ROTATION"].values
+                    if self.args.normalize else _DEFAULT_HELPER_VALUE)
 
         use_candidates = self.args.use_map and self.mode == "test"
 
         candidate_delta_references = (
             helper_df["CANDIDATE_DELTA_REFERENCES"].values
-            if self.args.use_map and use_candidates
-            else _DEFAULT_HELPER_VALUE
-        )
-        delta_reference = (
-            helper_df["DELTA_REFERENCE"].values
-            if self.args.use_delta and not use_candidates
-            else _DEFAULT_HELPER_VALUE
-        )
+            if self.args.use_map and use_candidates else _DEFAULT_HELPER_VALUE)
+        delta_reference = (helper_df["DELTA_REFERENCE"].values
+                           if self.args.use_delta and not use_candidates else
+                           _DEFAULT_HELPER_VALUE)
 
         helpers = [None for i in range(len(config.LSTM_HELPER_DICT_IDX))]
 
@@ -131,7 +115,6 @@ class LSTMDataset(Dataset):
 
 class ModelUtils:
     """Utils for LSTM baselines."""
-
     def save_checkpoint(self, save_dir: str, state: Dict[str, Any]) -> None:
         """Save checkpoint file.
         
@@ -140,16 +123,17 @@ class ModelUtils:
             state: State of the model
 
         """
-        filename = "{}/LSTM_rollout{}.pth.tar".format(save_dir, state["rollout_len"])
+        filename = "{}/LSTM_rollout{}.pth.tar".format(save_dir,
+                                                      state["rollout_len"])
         torch.save(state, filename)
 
     def load_checkpoint(
-        self,
-        checkpoint_file: str,
-        encoder: Any,
-        decoder: Any,
-        encoder_optimizer: Any,
-        decoder_optimizer: Any,
+            self,
+            checkpoint_file: str,
+            encoder: Any,
+            decoder: Any,
+            encoder_optimizer: Any,
+            decoder_optimizer: Any,
     ) -> Tuple[int, int, float]:
         """Load the checkpoint.
 
@@ -171,8 +155,10 @@ class ModelUtils:
             best_loss = checkpoint["best_loss"]
             rollout_len = checkpoint["rollout_len"]
             if use_cuda:
-                encoder.module.load_state_dict(checkpoint["encoder_state_dict"])
-                decoder.module.load_state_dict(checkpoint["decoder_state_dict"])
+                encoder.module.load_state_dict(
+                    checkpoint["encoder_state_dict"])
+                decoder.module.load_state_dict(
+                    checkpoint["decoder_state_dict"])
             else:
                 encoder.load_state_dict(checkpoint["encoder_state_dict"])
                 decoder.load_state_dict(checkpoint["decoder_state_dict"])
@@ -206,7 +192,8 @@ class ModelUtils:
         output = torch.stack(output)
         return [_input, output, helpers]
 
-    def init_hidden(self, batch_size: int, hidden_size: int) -> Tuple[Any, Any]:
+    def init_hidden(self, batch_size: int,
+                    hidden_size: int) -> Tuple[Any, Any]:
         """Get initial hidden state for LSTM.
 
         Args:

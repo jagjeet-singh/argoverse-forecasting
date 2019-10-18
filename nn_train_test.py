@@ -1,7 +1,12 @@
 """This module is used for Nearest Neighbor based baselines.
 
 Example usage:
-    $ python nn_train_test.py --test_features ../data/forecasting_data_test.pkl --train_features ../data/forecasting_data_train.pkl --val_features ../data/forecasting_data_val.pkl ../../data/ --use_map --use_delta --n_neigh 3 --traj_save_path forecasted_trajectories/nn_none.pkl
+    $ python nn_train_test.py 
+        --test_features ../data/forecasting_data_test.pkl 
+        --train_features ../data/forecasting_data_train.pkl 
+        --val_features ../data/forecasting_data_val.pkl ../../data/ 
+        --use_map --use_delta --n_neigh 3 
+        --traj_save_path forecasted_trajectories/nn_none.pkl
 """
 
 import argparse
@@ -36,13 +41,15 @@ def parse_arguments():
         type=str,
         help="path to the file which has test features.",
     )
-    parser.add_argument(
-        "--test", action="store_true", help="Load the saved model and test"
-    )
-    parser.add_argument(
-        "--use_map", action="store_true", help="Use the map based features"
-    )
-    parser.add_argument("--use_social", action="store_true", help="Use social features")
+    parser.add_argument("--test",
+                        action="store_true",
+                        help="Load the saved model and test")
+    parser.add_argument("--use_map",
+                        action="store_true",
+                        help="Use the map based features")
+    parser.add_argument("--use_social",
+                        action="store_true",
+                        help="Use social features")
     parser.add_argument(
         "--normalize",
         action="store_true",
@@ -59,35 +66,42 @@ def parse_arguments():
         type=int,
         help="Batch size for parallel computation",
     )
-    parser.add_argument(
-        "--obs_len", default=20, type=int, help="Observed length of the trajectory"
-    )
-    parser.add_argument("--pred_len", default=30, type=int, help="Prediction Horizon")
+    parser.add_argument("--obs_len",
+                        default=20,
+                        type=int,
+                        help="Observed length of the trajectory")
+    parser.add_argument("--pred_len",
+                        default=30,
+                        type=int,
+                        help="Prediction Horizon")
     parser.add_argument(
         "--n_neigh",
         default=1,
         type=int,
-        help="Number of Nearest Neighbors to take. For map-based baselines, it is number of neighbors along each centerline.",
+        help=
+        "Number of Nearest Neighbors to take. For map-based baselines, it is number of neighbors along each centerline.",
     )
     parser.add_argument(
         "--model_path",
         required=True,
         type=str,
-        help="path to the pickle file where the model will be / has been saved.",
+        help=
+        "path to the pickle file where the model will be / has been saved.",
     )
     parser.add_argument(
         "--traj_save_path",
         required=True,
         type=str,
-        help="path to the pickle file where forecasted trajectories will be saved.",
+        help=
+        "path to the pickle file where forecasted trajectories will be saved.",
     )
 
     return parser.parse_args()
 
 
 def perform_k_nn_experiments(
-    data_dict: Dict[str, Union[np.ndarray, pd.DataFrame, None]], baseline_key: str
-) -> None:
+        data_dict: Dict[str, Union[np.ndarray, pd.DataFrame, None]],
+        baseline_key: str) -> None:
     """Perform various experiments using K Nearest Neighbor Regressor.
 
     Args:

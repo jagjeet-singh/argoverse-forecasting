@@ -3,7 +3,12 @@
 Note: The training code for these baselines is covered under the patent <PATENT_LINK>.
 
 Example usage:
-python lstm_train_test.py --model_path saved_models/lstm.pth.tar --test_features ../data/forecasting_data_test.pkl --train_features ../data/forecasting_data_train.pkl --val_features ../data/forecasting_data_val.pkl --use_delta --normalize
+python lstm_train_test.py 
+    --model_path saved_models/lstm.pth.tar 
+    --test_features ../data/forecasting_data_test.pkl 
+    --train_features ../data/forecasting_data_train.pkl 
+    --val_features ../data/forecasting_data_val.pkl 
+    --use_delta --normalize
 """
 
 import os
@@ -47,16 +52,22 @@ def parse_arguments() -> Any:
 
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--test_batch_size", type=int, default=512, help="Test batch size"
-    )
-    parser.add_argument(
-        "--model_path", required=False, type=str, help="path to the saved model"
-    )
-    parser.add_argument(
-        "--obs_len", default=20, type=int, help="Observed length of the trajectory"
-    )
-    parser.add_argument("--pred_len", default=30, type=int, help="Prediction Horizon")
+    parser.add_argument("--test_batch_size",
+                        type=int,
+                        default=512,
+                        help="Test batch size")
+    parser.add_argument("--model_path",
+                        required=False,
+                        type=str,
+                        help="path to the saved model")
+    parser.add_argument("--obs_len",
+                        default=20,
+                        type=int,
+                        help="Observed length of the trajectory")
+    parser.add_argument("--pred_len",
+                        default=30,
+                        type=int,
+                        help="Prediction Horizon")
     parser.add_argument(
         "--normalize",
         action="store_true",
@@ -91,36 +102,47 @@ def parse_arguments() -> Any:
         type=int,
         help="Batch size for parallel computation",
     )
-    parser.add_argument(
-        "--use_map", action="store_true", help="Use the map based features"
-    )
-    parser.add_argument("--use_social", action="store_true", help="Use social features")
-    parser.add_argument(
-        "--test", action="store_true", help="If true, only run the inference"
-    )
-    parser.add_argument(
-        "--train_batch_size", type=int, default=512, help="Training batch size"
-    )
-    parser.add_argument(
-        "--val_batch_size", type=int, default=512, help="Val batch size"
-    )
-    parser.add_argument("--end_epoch", type=int, default=5000, help="Last epoch")
-    parser.add_argument("--lr", type=float, default=0.001, help="Learning rate")
+    parser.add_argument("--use_map",
+                        action="store_true",
+                        help="Use the map based features")
+    parser.add_argument("--use_social",
+                        action="store_true",
+                        help="Use social features")
+    parser.add_argument("--test",
+                        action="store_true",
+                        help="If true, only run the inference")
+    parser.add_argument("--train_batch_size",
+                        type=int,
+                        default=512,
+                        help="Training batch size")
+    parser.add_argument("--val_batch_size",
+                        type=int,
+                        default=512,
+                        help="Val batch size")
+    parser.add_argument("--end_epoch",
+                        type=int,
+                        default=5000,
+                        help="Last epoch")
+    parser.add_argument("--lr",
+                        type=float,
+                        default=0.001,
+                        help="Learning rate")
     parser.add_argument(
         "--traj_save_path",
         required=False,
         type=str,
-        help="path to the pickle file where forecasted trajectories will be saved.",
+        help=
+        "path to the pickle file where forecasted trajectories will be saved.",
     )
     return parser.parse_args()
 
 
 class EncoderRNN(nn.Module):
     """Encoder Network."""
-
-    def __init__(
-        self, input_size: int = 2, embedding_size: int = 8, hidden_size: int = 16
-    ):
+    def __init__(self,
+                 input_size: int = 2,
+                 embedding_size: int = 8,
+                 hidden_size: int = 16):
         """Initialize the encoder network.
 
         Args:
@@ -152,7 +174,6 @@ class EncoderRNN(nn.Module):
 
 class DecoderRNN(nn.Module):
     """Decoder Network."""
-
     def __init__(self, embedding_size=8, hidden_size=16, output_size=2):
         """Initialize the decoder network.
 
@@ -187,16 +208,16 @@ class DecoderRNN(nn.Module):
 
 
 def train(
-    train_loader: Any,
-    epoch: int,
-    criterion: Any,
-    logger: Logger,
-    encoder: Any,
-    decoder: Any,
-    encoder_optimizer: Any,
-    decoder_optimizer: Any,
-    model_utils: ModelUtils,
-    rollout_len: int = 30,
+        train_loader: Any,
+        epoch: int,
+        criterion: Any,
+        logger: Logger,
+        encoder: Any,
+        decoder: Any,
+        encoder_optimizer: Any,
+        decoder_optimizer: Any,
+        model_utils: ModelUtils,
+        rollout_len: int = 30,
 ) -> None:
     """Train the lstm network.
 
@@ -236,8 +257,8 @@ def train(
 
         # Initialize encoder hidden state
         encoder_hidden = model_utils.init_hidden(
-            batch_size, encoder.module.hidden_size if use_cuda else encoder.hidden_size
-        )
+            batch_size,
+            encoder.module.hidden_size if use_cuda else encoder.hidden_size)
 
         # Initialize losses
         loss = 0
@@ -257,7 +278,8 @@ def train(
 
         # Decode hidden state in future trajectory
         for di in range(rollout_len):
-            decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
+            decoder_output, decoder_hidden = decoder(decoder_input,
+                                                     decoder_hidden)
             decoder_outputs[:, di, :] = decoder_output
 
             # Update loss
@@ -277,26 +299,29 @@ def train(
         if global_step % 1000 == 0:
 
             # Log results
-            print(f"Train -- Epoch:{epoch}, loss:{loss}, Rollout:{rollout_len}")
+            print(
+                f"Train -- Epoch:{epoch}, loss:{loss}, Rollout:{rollout_len}")
 
-            logger.scalar_summary(tag="Train/loss", value=loss.item(), step=epoch)
+            logger.scalar_summary(tag="Train/loss",
+                                  value=loss.item(),
+                                  step=epoch)
 
         global_step += 1
 
 
 def validate(
-    val_loader: Any,
-    epoch: int,
-    criterion: Any,
-    logger: Logger,
-    encoder: Any,
-    decoder: Any,
-    encoder_optimizer: Any,
-    decoder_optimizer: Any,
-    model_utils: ModelUtils,
-    prev_loss: float,
-    decrement_counter: int,
-    rollout_len: int = 30,
+        val_loader: Any,
+        epoch: int,
+        criterion: Any,
+        logger: Logger,
+        encoder: Any,
+        decoder: Any,
+        encoder_optimizer: Any,
+        decoder_optimizer: Any,
+        model_utils: ModelUtils,
+        prev_loss: float,
+        decrement_counter: int,
+        rollout_len: int = 30,
 ) -> Tuple[float, int]:
     """Validate the lstm network.
 
@@ -336,8 +361,8 @@ def validate(
 
         # Initialize encoder hidden state
         encoder_hidden = model_utils.init_hidden(
-            batch_size, encoder.module.hidden_size if use_cuda else encoder.hidden_size
-        )
+            batch_size,
+            encoder.module.hidden_size if use_cuda else encoder.hidden_size)
 
         # Initialize loss
         loss = 0
@@ -357,7 +382,8 @@ def validate(
 
         # Decode hidden state in future trajectory
         for di in range(output_length):
-            decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
+            decoder_output, decoder_hidden = decoder(decoder_input,
+                                                     decoder_hidden)
             decoder_outputs[:, di, :] = decoder_output
 
             # Update losses for all benchmarks
@@ -415,12 +441,12 @@ def validate(
 
 
 def infer_absolute(
-    test_loader: torch.utils.data.DataLoader,
-    encoder: EncoderRNN,
-    decoder: DecoderRNN,
-    start_idx: int,
-    forecasted_save_dir: str,
-    model_utils: ModelUtils,
+        test_loader: torch.utils.data.DataLoader,
+        encoder: EncoderRNN,
+        decoder: DecoderRNN,
+        start_idx: int,
+        forecasted_save_dir: str,
+        model_utils: ModelUtils,
 ):
     """Infer function for non-map LSTM baselines and save the forecasted trajectories.
 
@@ -457,8 +483,8 @@ def infer_absolute(
 
         # Initialize encoder hidden state
         encoder_hidden = model_utils.init_hidden(
-            batch_size, encoder.module.hidden_size if use_cuda else encoder.hidden_size
-        )
+            batch_size,
+            encoder.module.hidden_size if use_cuda else encoder.hidden_size)
 
         # Encode observed trajectory
         for ei in range(input_length):
@@ -471,11 +497,13 @@ def infer_absolute(
         # Initialize decoder hidden state as encoder hidden state
         decoder_hidden = encoder_hidden
 
-        decoder_outputs = torch.zeros((batch_size, args.pred_len, 2)).to(device)
+        decoder_outputs = torch.zeros(
+            (batch_size, args.pred_len, 2)).to(device)
 
         # Decode hidden state in future trajectory
         for di in range(args.pred_len):
-            decoder_output, decoder_hidden = decoder(decoder_input, decoder_hidden)
+            decoder_output, decoder_hidden = decoder(decoder_input,
+                                                     decoder_hidden)
             decoder_outputs[:, di, :] = decoder_output
 
             # Use own predictions as inputs at next step
@@ -497,17 +525,18 @@ def infer_absolute(
             seq_id = int(helpers_dict["SEQ_PATHS"][i])
             forecasted_trajectories[seq_id] = [abs_outputs[i]]
 
-    with open(os.path.join(forecasted_save_dir, f"{start_idx}.pkl"), "wb") as f:
+    with open(os.path.join(forecasted_save_dir, f"{start_idx}.pkl"),
+              "wb") as f:
         pkl.dump(forecasted_trajectories, f)
 
 
 def infer_map(
-    test_loader: torch.utils.data.DataLoader,
-    encoder: EncoderRNN,
-    decoder: DecoderRNN,
-    start_idx: int,
-    forecasted_save_dir: str,
-    model_utils: ModelUtils,
+        test_loader: torch.utils.data.DataLoader,
+        encoder: EncoderRNN,
+        decoder: DecoderRNN,
+        start_idx: int,
+        forecasted_save_dir: str,
+        model_utils: ModelUtils,
 ):
     """Infer function for map-based LSTM baselines and save the forecasted trajectories.
 
@@ -543,28 +572,27 @@ def infer_map(
 
         # Iterate over every element in the batch
         for batch_idx in range(batch_size):
-            num_candidates = len(helpers_dict["CANDIDATE_CENTERLINES"][batch_idx])
+            num_candidates = len(
+                helpers_dict["CANDIDATE_CENTERLINES"][batch_idx])
             curr_centroids = helpers_dict["CENTROIDS"][batch_idx]
             seq_id = int(helpers_dict["SEQ_PATHS"][batch_idx])
             abs_outputs = []
 
             # Predict using every centerline candidate for the current trajectory
             for candidate_idx in range(num_candidates):
-                curr_centerline = helpers_dict["CANDIDATE_CENTERLINES"][batch_idx][
-                    candidate_idx
-                ]
-                curr_nt_dist = helpers_dict["CANDIDATE_NT_DISTANCES"][batch_idx][
-                    candidate_idx
-                ]
+                curr_centerline = helpers_dict["CANDIDATE_CENTERLINES"][
+                    batch_idx][candidate_idx]
+                curr_nt_dist = helpers_dict["CANDIDATE_NT_DISTANCES"][
+                    batch_idx][candidate_idx]
 
                 _input = torch.FloatTensor(
-                    np.expand_dims(curr_nt_dist[: args.obs_len].astype(float), 0)
-                ).to(device)
+                    np.expand_dims(curr_nt_dist[:args.obs_len].astype(float),
+                                   0)).to(device)
 
                 # Initialize encoder hidden state
                 encoder_hidden = model_utils.init_hidden(
-                    1, encoder.module.hidden_size if use_cuda else encoder.hidden_size
-                )
+                    1, encoder.module.hidden_size
+                    if use_cuda else encoder.hidden_size)
 
                 # Encode observed trajectory
                 for ei in range(input_length):
@@ -582,8 +610,7 @@ def infer_map(
                 # Decode hidden state in future trajectory
                 for di in range(args.pred_len):
                     decoder_output, decoder_hidden = decoder(
-                        decoder_input, decoder_hidden
-                    )
+                        decoder_input, decoder_hidden)
                     decoder_outputs[:, di, :] = decoder_output
 
                     # Use own predictions as inputs at next step
@@ -592,11 +619,8 @@ def infer_map(
                 # Get absolute trajectory
                 abs_helpers = {}
                 abs_helpers["REFERENCE"] = np.expand_dims(
-                    np.array(
-                        helpers_dict["CANDIDATE_DELTA_REFERENCES"][batch_idx][
-                            candidate_idx
-                        ]
-                    ),
+                    np.array(helpers_dict["CANDIDATE_DELTA_REFERENCES"]
+                             [batch_idx][candidate_idx]),
                     0,
                 )
                 abs_helpers["CENTERLINE"] = np.expand_dims(curr_centerline, 0)
@@ -613,17 +637,18 @@ def infer_map(
             forecasted_trajectories[seq_id] = abs_outputs
 
     os.makedirs(forecasted_save_dir, exist_ok=True)
-    with open(os.path.join(forecasted_save_dir, f"{start_idx}.pkl"), "wb") as f:
+    with open(os.path.join(forecasted_save_dir, f"{start_idx}.pkl"),
+              "wb") as f:
         pkl.dump(forecasted_trajectories, f)
 
 
 def infer_helper(
-    curr_data_dict: Dict[str, Any],
-    start_idx: int,
-    encoder: EncoderRNN,
-    decoder: DecoderRNN,
-    model_utils: ModelUtils,
-    forecasted_save_dir: str,
+        curr_data_dict: Dict[str, Any],
+        start_idx: int,
+        encoder: EncoderRNN,
+        decoder: DecoderRNN,
+        model_utils: ModelUtils,
+        forecasted_save_dir: str,
 ):
     """Run inference on the current joblib batch.
 
@@ -657,9 +682,9 @@ def infer_helper(
         )
 
     else:
-        print(
-            f"#### LSTM+social inference at {start_idx} ####"
-        ) if args.use_social else print(f"#### LSTM inference at {start_idx} ####")
+        print(f"#### LSTM+social inference at {start_idx} ####"
+              ) if args.use_social else print(
+                  f"#### LSTM inference at {start_idx} ####")
         infer_absolute(
             curr_test_loader,
             encoder,
@@ -700,8 +725,7 @@ def main():
     # Get model
     criterion = nn.MSELoss()
     encoder = EncoderRNN(
-        input_size=len(baseline_utils.BASELINE_INPUT_FEATURES[baseline_key])
-    )
+        input_size=len(baseline_utils.BASELINE_INPUT_FEATURES[baseline_key]))
     decoder = DecoderRNN(output_size=2)
     if use_cuda:
         encoder = nn.DataParallel(encoder)
@@ -715,8 +739,8 @@ def main():
     # If model_path provided, resume from saved checkpoint
     if args.model_path is not None and os.path.isfile(args.model_path):
         epoch, rollout_len, _ = model_utils.load_checkpoint(
-            args.model_path, encoder, decoder, encoder_optimizer, decoder_optimizer
-        )
+            args.model_path, encoder, decoder, encoder_optimizer,
+            decoder_optimizer)
         start_epoch = epoch + 1
         start_rollout_idx = ROLLOUT_LENS.index(rollout_len) + 1
 
@@ -814,15 +838,14 @@ def main():
         temp_save_dir = tempfile.mkdtemp()
 
         test_size = data_dict["test_input"].shape[0]
-        test_data_subsets = baseline_utils.get_test_data_dict_subset(data_dict, args)
+        test_data_subsets = baseline_utils.get_test_data_dict_subset(
+            data_dict, args)
 
         # test_batch_size should be lesser than joblib_batch_size
         Parallel(n_jobs=-2, verbose=2)(
-            delayed(infer_helper)(
-                test_data_subsets[i], i, encoder, decoder, model_utils, temp_save_dir
-            )
-            for i in range(0, test_size, args.joblib_batch_size)
-        )
+            delayed(infer_helper)(test_data_subsets[i], i, encoder, decoder,
+                                  model_utils, temp_save_dir)
+            for i in range(0, test_size, args.joblib_batch_size))
 
         baseline_utils.merge_saved_traj(temp_save_dir, args.traj_save_path)
         shutil.rmtree(temp_save_dir)

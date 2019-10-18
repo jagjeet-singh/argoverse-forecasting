@@ -1,6 +1,5 @@
 """This module defines all the config parameters."""
 
-
 FEATURE_FORMAT = {
     "TIMESTAMP": 0,
     "TRACK_ID": 1,
@@ -37,7 +36,8 @@ LSTM_HELPER_DICT_IDX = {
 }
 
 BASELINE_INPUT_FEATURES = {
-    "social": ["X", "Y", "MIN_DISTANCE_FRONT", "MIN_DISTANCE_BACK", "NUM_NEIGHBORS"],
+    "social":
+    ["X", "Y", "MIN_DISTANCE_FRONT", "MIN_DISTANCE_BACK", "NUM_NEIGHBORS"],
     "map": ["OFFSET_FROM_CENTERLINE", "DISTANCE_ALONG_CENTERLINE"],
     "map_social": [
         "OFFSET_FROM_CENTERLINE",
@@ -69,8 +69,7 @@ _MAX_CENTERLINE_CANDIDATES_TEST = 10
 # Social Feature computation
 PADDING_TYPE = "REPEAT"  # Padding type for partial sequences
 STATIONARY_THRESHOLD = (
-    13
-)  # index of the sorted velocity to look at, to call it as stationary
+    13)  # index of the sorted velocity to look at, to call it as stationary
 VELOCITY_THRESHOLD = 1.0  # Velocity threshold for stationary
 EXIST_THRESHOLD = (
     15

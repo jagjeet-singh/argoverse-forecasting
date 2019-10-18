@@ -6,7 +6,6 @@ import tensorflow as tf
 
 class Logger(object):
     """Tensorboard logger class."""
-
     def __init__(self, log_dir: str, name: str = None):
         """Create a summary writer logging to log_dir.
 
@@ -23,11 +22,12 @@ class Logger(object):
                 os.makedirs(os.path.join(log_dir, name))
             except:
                 pass
-            self.writer = tf.summary.create_file_writer(
-                os.path.join(log_dir, name), filename_suffix=name
-            )
+            self.writer = tf.summary.create_file_writer(os.path.join(
+                log_dir, name),
+                                                        filename_suffix=name)
         else:
-            self.writer = tf.summary.create_file_writer(log_dir, filename_suffix=name)
+            self.writer = tf.summary.create_file_writer(log_dir,
+                                                        filename_suffix=name)
 
     def scalar_summary(self, tag: str, value: float, step: int):
         """Log a scalar variable.

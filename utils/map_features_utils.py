@@ -24,7 +24,6 @@ from utils.baseline_config import (
 
 class MapFeaturesUtils:
     """Utils for computation of map-based features."""
-
     def __init__(self):
         """Initialize class."""
         self._MANHATTAN_THRESHOLD = _MANHATTAN_THRESHOLD
@@ -33,9 +32,9 @@ class MapFeaturesUtils:
         self._MAX_SEARCH_RADIUS_CENTERLINES = _MAX_SEARCH_RADIUS_CENTERLINES
         self._MAX_CENTERLINE_CANDIDATES_TEST = _MAX_CENTERLINE_CANDIDATES_TEST
 
-    def get_point_in_polygon_score(
-        self, lane_seq: List[int], xy_seq: np.ndarray, city_name: str, avm: ArgoverseMap
-    ) -> int:
+    def get_point_in_polygon_score(self, lane_seq: List[int],
+                                   xy_seq: np.ndarray, city_name: str,
+                                   avm: ArgoverseMap) -> int:
         """Get the number of coordinates that lie insde the lane seq polygon.
 
         Args:
@@ -47,23 +46,21 @@ class MapFeaturesUtils:
             point_in_polygon_score: Number of coordinates in the trajectory that lie within the lane sequence
 
         """
-        lane_seq_polygon = cascaded_union(
-            [
-                Polygon(avm.get_lane_segment_polygon(lane, city_name)).buffer(0)
-                for lane in lane_seq
-            ]
-        )
+        lane_seq_polygon = cascaded_union([
+            Polygon(avm.get_lane_segment_polygon(lane, city_name)).buffer(0)
+            for lane in lane_seq
+        ])
         point_in_polygon_score = 0
         for xy in xy_seq:
             point_in_polygon_score += lane_seq_polygon.contains(Point(xy))
         return point_in_polygon_score
 
     def sort_lanes_based_on_point_in_polygon_score(
-        self,
-        lane_seqs: List[List[int]],
-        xy_seq: np.ndarray,
-        city_name: str,
-        avm: ArgoverseMap,
+            self,
+            lane_seqs: List[List[int]],
+            xy_seq: np.ndarray,
+            city_name: str,
+            avm: ArgoverseMap,
     ) -> List[List[int]]:
         """Filter lane_seqs based on the number of coordinates inside the bounding polygon of lanes.
 
@@ -79,26 +76,28 @@ class MapFeaturesUtils:
         point_in_polygon_scores = []
         for lane_seq in lane_seqs:
             point_in_polygon_scores.append(
-                self.get_point_in_polygon_score(lane_seq, xy_seq, city_name, avm)
-            )
+                self.get_point_in_polygon_score(lane_seq, xy_seq, city_name,
+                                                avm))
         randomized_tiebreaker = np.random.random(len(point_in_polygon_scores))
         sorted_point_in_polygon_scores_idx = np.lexsort(
-            (randomized_tiebreaker, np.array(point_in_polygon_scores))
-        )[::-1]
-        sorted_lane_seqs = [lane_seqs[i] for i in sorted_point_in_polygon_scores_idx]
+            (randomized_tiebreaker, np.array(point_in_polygon_scores)))[::-1]
+        sorted_lane_seqs = [
+            lane_seqs[i] for i in sorted_point_in_polygon_scores_idx
+        ]
         sorted_scores = [
-            point_in_polygon_scores[i] for i in sorted_point_in_polygon_scores_idx
+            point_in_polygon_scores[i]
+            for i in sorted_point_in_polygon_scores_idx
         ]
         return sorted_lane_seqs, sorted_scores
 
     def get_heuristic_centerlines_for_test_set(
-        self,
-        lane_seqs: List[List[int]],
-        xy_seq: np.ndarray,
-        city_name: str,
-        avm: ArgoverseMap,
-        max_candidates: int,
-        scores: List[int],
+            self,
+            lane_seqs: List[List[int]],
+            xy_seq: np.ndarray,
+            city_name: str,
+            avm: ArgoverseMap,
+            max_candidates: int,
+            scores: List[int],
     ) -> List[np.ndarray]:
         """Sort based on distance along centerline and return the centerlines.
         
@@ -135,19 +134,15 @@ class MapFeaturesUtils:
                 diverse_centerlines.append(centerline)
                 diverse_scores.append(score)
 
-        num_diverse_centerlines = min(
-            len(diverse_centerlines), max_candidates - aligned_cl_count
-        )
+        num_diverse_centerlines = min(len(diverse_centerlines),
+                                      max_candidates - aligned_cl_count)
         test_centerlines = aligned_centerlines
         if num_diverse_centerlines > 0:
-            probabilities = (
-                [
-                    float(score + 1) / (sum(diverse_scores) + len(diverse_scores))
-                    for score in diverse_scores
-                ]
-                if sum(diverse_scores) > 0
-                else [1.0 / len(diverse_scores)] * len(diverse_scores)
-            )
+            probabilities = ([
+                float(score + 1) / (sum(diverse_scores) + len(diverse_scores))
+                for score in diverse_scores
+            ] if sum(diverse_scores) > 0 else [1.0 / len(diverse_scores)] *
+                             len(diverse_scores))
             diverse_centerlines_idx = np.random.choice(
                 range(len(probabilities)),
                 num_diverse_centerlines,
@@ -162,15 +157,15 @@ class MapFeaturesUtils:
         return test_centerlines
 
     def get_candidate_centerlines_for_trajectory(
-        self,
-        xy: np.ndarray,
-        city_name: str,
-        avm: ArgoverseMap,
-        viz: bool = False,
-        max_search_radius: float = 50.0,
-        seq_len: int = 50,
-        max_candidates: int = 10,
-        mode: str = "test",
+            self,
+            xy: np.ndarray,
+            city_name: str,
+            avm: ArgoverseMap,
+            viz: bool = False,
+            max_search_radius: float = 50.0,
+            seq_len: int = 50,
+            max_candidates: int = 10,
+            mode: str = "test",
     ) -> List[np.ndarray]:
         """Get centerline candidates upto a threshold.
 
@@ -195,18 +190,14 @@ class MapFeaturesUtils:
         """
         # Get all lane candidates within a bubble
         curr_lane_candidates = avm.get_lane_ids_in_xy_bbox(
-            xy[-1, 0], xy[-1, 1], city_name, self._MANHATTAN_THRESHOLD
-        )
+            xy[-1, 0], xy[-1, 1], city_name, self._MANHATTAN_THRESHOLD)
 
         # Keep expanding the bubble until at least 1 lane is found
-        while (
-            len(curr_lane_candidates) < 1
-            and self._MANHATTAN_THRESHOLD < max_search_radius
-        ):
+        while (len(curr_lane_candidates) < 1
+               and self._MANHATTAN_THRESHOLD < max_search_radius):
             self._MANHATTAN_THRESHOLD *= 2
             curr_lane_candidates = avm.get_lane_ids_in_xy_bbox(
-                xy[-1, 0], xy[-1, 1], city_name, self._MANHATTAN_THRESHOLD
-            )
+                xy[-1, 0], xy[-1, 1], city_name, self._MANHATTAN_THRESHOLD)
 
         assert len(curr_lane_candidates) > 0, "No nearby lanes found!!"
 
@@ -214,16 +205,18 @@ class MapFeaturesUtils:
         traj_len = xy.shape[0]
 
         # Assuming a speed of 50 mps, set threshold for traversing in the front and back
-        dfs_threshold_front = (
-            self._DFS_THRESHOLD_FRONT_SCALE * (seq_len + 1 - traj_len) / 10
-        )
-        dfs_threshold_back = self._DFS_THRESHOLD_BACK_SCALE * (traj_len + 1) / 10
+        dfs_threshold_front = (self._DFS_THRESHOLD_FRONT_SCALE *
+                               (seq_len + 1 - traj_len) / 10)
+        dfs_threshold_back = self._DFS_THRESHOLD_BACK_SCALE * (traj_len +
+                                                               1) / 10
 
         # DFS to get all successor and predecessor candidates
         obs_pred_lanes: List[Sequence[int]] = []
         for lane in curr_lane_candidates:
-            candidates_future = avm.dfs(lane, city_name, 0, dfs_threshold_front)
-            candidates_past = avm.dfs(lane, city_name, 0, dfs_threshold_back, True)
+            candidates_future = avm.dfs(lane, city_name, 0,
+                                        dfs_threshold_front)
+            candidates_past = avm.dfs(lane, city_name, 0, dfs_threshold_back,
+                                      True)
 
             # Merge past and future
             for past_lane_seq in candidates_past:
@@ -238,18 +231,15 @@ class MapFeaturesUtils:
 
         # Sort lanes based on point in polygon score
         obs_pred_lanes, scores = self.sort_lanes_based_on_point_in_polygon_score(
-            obs_pred_lanes, xy, city_name, avm
-        )
+            obs_pred_lanes, xy, city_name, avm)
 
         # If the best centerline is not along the direction of travel, re-sort
         if mode == "test":
             candidate_centerlines = self.get_heuristic_centerlines_for_test_set(
-                obs_pred_lanes, xy, city_name, avm, max_candidates, scores
-            )
+                obs_pred_lanes, xy, city_name, avm, max_candidates, scores)
         else:
             candidate_centerlines = avm.get_cl_from_lane_seq(
-                [obs_pred_lanes[0]], city_name
-            )
+                [obs_pred_lanes[0]], city_name)
 
         if viz:
             plt.figure(0, figsize=(8, 7))
@@ -286,12 +276,12 @@ class MapFeaturesUtils:
         return candidate_centerlines
 
     def compute_map_features(
-        self,
-        agent_track: np.ndarray,
-        obs_len: int,
-        seq_len: int,
-        raw_data_format: Dict[str, int],
-        mode: str,
+            self,
+            agent_track: np.ndarray,
+            obs_len: int,
+            seq_len: int,
+            raw_data_format: Dict[str, int],
+            mode: str,
     ) -> Tuple[np.ndarray, Dict[str, Any]]:
         """Compute map based features for the given sequence.
 
@@ -311,13 +301,12 @@ class MapFeaturesUtils:
 
         """
         # Get observed 2 secs of the agent
-        agent_xy = agent_track[:, [raw_data_format["X"], raw_data_format["Y"]]].astype(
-            "float"
-        )
+        agent_xy = agent_track[:, [raw_data_format["X"], raw_data_format["Y"]
+                                   ]].astype("float")
         agent_track_obs = agent_track[:obs_len]
-        agent_xy_obs = agent_track_obs[
-            :, [raw_data_format["X"], raw_data_format["Y"]]
-        ].astype("float")
+        agent_xy_obs = agent_track_obs[:, [
+            raw_data_format["X"], raw_data_format["Y"]
+        ]].astype("float")
 
         # Get API for Argo Dataset map
         avm = ArgoverseMap()
@@ -343,8 +332,7 @@ class MapFeaturesUtils:
             for candidate_centerline in candidate_centerlines:
                 candidate_nt_distance = np.full((seq_len, 2), None)
                 candidate_nt_distance[:obs_len] = get_nt_distance(
-                    agent_xy_obs, candidate_centerline
-                )
+                    agent_xy_obs, candidate_centerline)
                 candidate_nt_distances.append(candidate_nt_distance)
 
         else:
@@ -361,7 +349,9 @@ class MapFeaturesUtils:
             candidate_nt_distances = [np.full((seq_len, 2), None)]
 
             # Get NT distance for oracle centerline
-            oracle_nt_dist = get_nt_distance(agent_xy, oracle_centerline, viz=False)
+            oracle_nt_dist = get_nt_distance(agent_xy,
+                                             oracle_centerline,
+                                             viz=False)
 
         map_feature_helpers = {
             "ORACLE_CENTERLINE": oracle_centerline,

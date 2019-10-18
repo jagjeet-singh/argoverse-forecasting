@@ -1,7 +1,8 @@
 """const_vel_train_test.py runs a constant velocity baseline.
 
 Example usage:
-    python const_vel_test.py --test_features data/features/forecasted_features_test.pkl --obs_len 20 --pred_len 30 --traj_save_path forecasted_trajectories/const_vel.pkl
+    python const_vel_test.py --test_features data/features/forecasted_features_test.pkl 
+        --obs_len 20 --pred_len 30 --traj_save_path forecasted_trajectories/const_vel.pkl
 """
 import argparse
 from typing import Any, Tuple
@@ -24,15 +25,20 @@ def parse_arguments():
         type=str,
         help="path to the file which has test features.",
     )
-    parser.add_argument(
-        "--obs_len", default=20, type=int, help="Observed length of the trajectory"
-    )
-    parser.add_argument("--pred_len", default=30, type=int, help="Prediction Horizon")
+    parser.add_argument("--obs_len",
+                        default=20,
+                        type=int,
+                        help="Observed length of the trajectory")
+    parser.add_argument("--pred_len",
+                        default=30,
+                        type=int,
+                        help="Prediction Horizon")
     parser.add_argument(
         "--traj_save_path",
         required=True,
         type=str,
-        help="path to the pickle file where forecasted trajectories will be saved.",
+        help=
+        "path to the pickle file where forecasted trajectories will be saved.",
     )
     return parser.parse_args()
 
@@ -60,9 +66,8 @@ def get_mean_velocity(coords: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     return vx, vy
 
 
-def predict(
-    obs_trajectory: np.ndarray, vx: np.ndarray, vy: np.ndarray, args: Any
-) -> np.ndarray:
+def predict(obs_trajectory: np.ndarray, vx: np.ndarray, vy: np.ndarray,
+            args: Any) -> np.ndarray:
     """Predict future trajectory given mean velocity.
 
     Args:
@@ -85,9 +90,8 @@ def predict(
     return pred_trajectory
 
 
-def forecast_and_save_trajectory(
-    obs_trajectory: np.ndarray, seq_id: np.ndarray, args: Any
-) -> None:
+def forecast_and_save_trajectory(obs_trajectory: np.ndarray,
+                                 seq_id: np.ndarray, args: Any) -> None:
     """Forecast future trajectory and save it.
 
     Args:
@@ -117,9 +121,8 @@ def main():
     feature_idx = [FEATURE_FORMAT["X"], FEATURE_FORMAT["Y"]]
     seq_id = df["SEQUENCE"].values
 
-    obs_trajectory = np.stack(df["FEATURES"].values)[
-        :, : args.obs_len, feature_idx
-    ].astype("float")
+    obs_trajectory = np.stack(
+        df["FEATURES"].values)[:, :args.obs_len, feature_idx].astype("float")
 
     forecast_and_save_trajectory(obs_trajectory, seq_id, args)
 
