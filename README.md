@@ -56,6 +56,9 @@ $ python compute_features.py --data_dir <path/to/data> --feature_dir <directory/
 | Feature computation (`compute_features.py`) | test | 14 hrs |
 
 
+*Note*: If you are not changing anything in the feature computation step, you can also download the precomputed features from [this]
+(https://www.google.com/url?q=https://drive.google.com/drive/folders/1hHbpdlsgQL_XOxrUK0OuWGX0BxiGpxKY?usp%3Dsharing&sa=D&source=hangouts&ust=1572986070601000&usg=AFQjCNFZPWA9Z17Oi1bf3HAmMwKhRgRM_Q) link
+
 ### 2) Run forecasting baselines (`nn_train_test.py`, `lstm_train_test.py`)
 
 Once the features have been computed, we can run any of the below baselines. 
