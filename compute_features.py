@@ -5,19 +5,19 @@ Example usage:
         --feature_dir ~/val/features --mode val
 """
 
+import argparse
 import os
+import pickle as pkl
 import shutil
 import tempfile
 import time
 from typing import Any, Dict, List, Tuple
 
-import argparse
-from joblib import Parallel, delayed
 import numpy as np
 import pandas as pd
-import pickle as pkl
+from joblib import Parallel, delayed
 
-from utils.baseline_config import RAW_DATA_FORMAT, _FEATURES_SMALL_SIZE
+from utils.baseline_config import _FEATURES_SMALL_SIZE, FEATURE_FORMAT, RAW_DATA_FORMAT
 from utils.map_features_utils import MapFeaturesUtils
 from utils.social_features_utils import SocialFeaturesUtils
 
@@ -204,7 +204,25 @@ def merge_saved_features(batch_save_dir: str) -> None:
 
     # Save the features for all the sequences into a single file
     all_features_df.to_pickle(
-        f"{args.feature_dir}/forecasting_features_{args.mode}.pkl")
+        f"{args.feature_dir}/forecasting_features_{args.mode}.pkl"
+    )
+
+    if args.mode != "test":
+        # Save ground truth
+        gt_trajectories: Dict[int, np.ndarray] = {}
+        for sequence_id, sequence_features in all_features_df[
+            ["SEQUENCE", "FEATURES"]
+        ].values:
+            ground_truth = []
+            for features in sequence_features:
+                x, y = features[FEATURE_FORMAT["X"]], features[FEATURE_FORMAT["Y"]]
+                ground_truth.append([x, y])
+            ground_truth_tensor = np.vstack(ground_truth)
+            gt_trajectories[sequence_id] = ground_truth_tensor
+        with open(
+            f"{args.feature_dir}/forecasting_ground_truth_{args.mode}.pkl", "wb"
+        ) as f:
+            pkl.dump(gt_trajectories, f, pkl.HIGHEST_PROTOCOL)
 
 
 if __name__ == "__main__":

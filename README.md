@@ -1,6 +1,5 @@
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
 
-
 # Argoverse Motion Forecasting Baselines
 
 > Official GitHub repository for [Argoverse](https://www.argoverse.org) Motion Forecasting Baselines. This repository is released under **BSD-3-Clause-Clear License**.
@@ -32,35 +31,40 @@ to setup Argoverse API. Make sure the map files are downloaded to the root direc
 Argoverse provides both the full dataset and the sample version of the dataset for testing purposes. Head to [their website](https://www.argoverse.org/data.html#download-link) to see the download option.
 
 ### 3) Install dependencies
+
 Install the packages mentioned in `requirements.txt`
+
 ```
 pip install -r requirements.txt
 ```
+
 ---
 
 ## Usage
+
 Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a `p2.8xlarge` instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
 
-### 1) Feature computation (`compute_features.py`)
+### 1) Feature and Grouth Truth computation (`compute_features.py`)
 
 To begin with, we need to compute social and map features for train, val and test set. This is the most computationally expensive part.
 
-Run the following script to compute features for each of train/val/test.
+Run the following script to compute features and ground truth for each of train/val/test (ground truth is not generated for the test dataset since it does not exist).
+
 ```
 $ python compute_features.py --data_dir <path/to/data> --feature_dir <directory/where/features/to/be/saved> --mode <train/val/test> --obs_len 20 --pred_len 30
 ```
-| Component | Mode | Runtime |
-| --- | --- | --- |
-| Feature computation (`compute_features.py`) | train | 38 hrs |
-| Feature computation (`compute_features.py`) | val | 7 hrs |
-| Feature computation (`compute_features.py`) | test | 14 hrs |
 
+| Component                                   | Mode  | Runtime |
+| ------------------------------------------- | ----- | ------- |
+| Feature computation (`compute_features.py`) | train | 38 hrs  |
+| Feature computation (`compute_features.py`) | val   | 7 hrs   |
+| Feature computation (`compute_features.py`) | test  | 14 hrs  |
 
-*Note*: If you are not changing anything in the feature computation step, you can also download the precomputed features from [this](https://www.google.com/url?q=https://drive.google.com/drive/folders/1hHbpdlsgQL_XOxrUK0OuWGX0BxiGpxKY?usp%3Dsharing&sa=D&source=hangouts&ust=1572986070601000&usg=AFQjCNFZPWA9Z17Oi1bf3HAmMwKhRgRM_Q) link
+_Note_: If you are not changing anything in the feature computation step, you can also download the precomputed features from [this](https://www.google.com/url?q=https://drive.google.com/drive/folders/1hHbpdlsgQL_XOxrUK0OuWGX0BxiGpxKY?usp%3Dsharing&sa=D&source=hangouts&ust=1572986070601000&usg=AFQjCNFZPWA9Z17Oi1bf3HAmMwKhRgRM_Q) link
 
 ### 2) Run forecasting baselines (`nn_train_test.py`, `lstm_train_test.py`)
 
-Once the features have been computed, we can run any of the below baselines. 
+Once the features have been computed, we can run any of the below baselines.
 
 #### Constant Velocity:
 
@@ -68,53 +72,58 @@ Once the features have been computed, we can run any of the below baselines.
 $ python const_vel_train_test.py --test_features <path/to/test/features> --obs_len 20 --pred_len 30 --traj_save_path <pkl/file/for/forecasted/trajectories>
 ```
 
-| Component | Mode | Runtime |
-| --- | --- | --- |
+| Component                                     | Mode       | Runtime         |
+| --------------------------------------------- | ---------- | --------------- |
 | Constant Velocity (`const_vel_train_test.py`) | train+test | less than 1 min |
-
 
 #### K-Nearest Neighbors:
 
 Using Map prior:
+
 ```
 $ python nn_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --use_map --use_delta --obs_len 20 --pred_len 30 --n_neigh 3 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
 ```
 
 Neither map nor social:
+
 ```
 $ python nn_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --normalize --use_delta --obs_len 20 --pred_len 30 --n_neigh 9 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
 ```
 
-| Component | Mode | Baseline | Runtime |
-| --- | --- | --- | --- |
-| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Map prior | 3.2 hrs |
-| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Niether map nor social | 0.5 hrs | 
+| Component                                | Mode       | Baseline               | Runtime |
+| ---------------------------------------- | ---------- | ---------------------- | ------- |
+| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Map prior              | 3.2 hrs |
+| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Niether map nor social | 0.5 hrs |
 
 #### LSTM:
 
 Using Map prior:
+
 ```
 $ python lstm_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --model_path <path/to/saved/checkpoint> --use_map --use_delta --obs_len 20 --pred_len 30 --traj_save_path <pkl/file/for/forecasted/trajectories>
 ```
 
 Using Social features:
+
 ```
 $ python lstm_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --model_path <path/to/saved/checkpoint> --use_social --use_delta --normalize --obs_len 20 --pred_len 30  --traj_save_path <pkl/file/for/forecasted/trajectories>
 ```
 
 Neither map nor social:
+
 ```
 $ python lstm_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --model_path <path/to/saved/checkpoint> --use_delta --normalize --obs_len 20 --pred_len 30 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
 ```
 
-| Component | Mode | Baseline | Runtime |
-| --- | --- | --- | --- |
-| LSTM (`lstm_train_test.py`) | train | Map prior | 2 hrs |
-| LSTM (`lstm_train_test.py`) | test | Map prior | 1.5 hrs |
-| LSTM (`lstm_train_test.py`) | train | Social | 5.5 hrs |
-| LSTM (`lstm_train_test.py`) | test | Social | 0.1 hr |
+| Component                   | Mode  | Baseline               | Runtime |
+| --------------------------- | ----- | ---------------------- | ------- |
+| LSTM (`lstm_train_test.py`) | train | Map prior              | 2 hrs   |
+| LSTM (`lstm_train_test.py`) | test  | Map prior              | 1.5 hrs |
+| LSTM (`lstm_train_test.py`) | train | Social                 | 5.5 hrs |
+| LSTM (`lstm_train_test.py`) | test  | Social                 | 0.1 hr  |
 | LSTM (`lstm_train_test.py`) | train | Neither Social nor Map | 5.5 hrs |
-| LSTM (`lstm_train_test.py`) | test | Neither Social nor Map | 0.1 hr |
+| LSTM (`lstm_train_test.py`) | test  | Neither Social nor Map | 0.1 hr  |
+
 ---
 
 ### 3) Metrics and visualization
@@ -126,21 +135,25 @@ Here we compute the metric values for the given trajectories. Since ground truth
 Some examples:
 
 Evaluating a baseline that didn't use map and allowing 6 guesses
+
 ```
 python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --max_n_guesses 6
 ```
 
 Evaluating a baseline that used map prior and allowing 1 guesses along each of the 9 centerlines
+
 ```
 python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --n_guesses_cl 1 --n_cl 9 --max_neighbors_cl 3
 ```
 
 Evaluating a K-NN baseline that can use map for pruning and allowing 6 guesses
+
 ```
 python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --prune_n_guesses 6
 ```
 
 It will print out something like
+
 ```
 ------------------------------------------------
 Prediction Horizon : 30, Max #guesses (K): 1
@@ -159,17 +172,18 @@ Here we visualize the forecasted trajectories
 ```
 python eval_forecasting_helper.py --viz --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --features <path/to/test/features>
 ```
+
 Some sample results are shown below
 
-| | |
-|:-------------------------:|:-------------------------:|
-| ![](images/lane_change.png) | ![](images/map_for_reference_1.png) |
+|                                |                                     |
+| :----------------------------: | :---------------------------------: |
+|  ![](images/lane_change.png)   | ![](images/map_for_reference_1.png) |
 | ![](images/right_straight.png) | ![](images/map_for_reference_2.png) |
-
 
 ---
 
 ## Contributing
+
 Contributions are always welcome! Please be aware of our [contribution guidelines for this project](CONTRIBUTING.md).
 
 ---
