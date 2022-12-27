@@ -2,7 +2,7 @@ joblib==0.13.2
 matplotlib==3.1.1
 ipdb==0.12.2
 typing==3.7.4.1
-setuptools==41.0.1
+setuptools==65.5.1
 termcolor==1.1.0
 pandas==0.25.1
 Shapely==1.6.4.post2
